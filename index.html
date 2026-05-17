@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,76 +12,103 @@
         <div class="brand">
           <img src="assets/chip-stack.svg" alt="" class="brand-mark" />
           <div>
-            <p class="eyebrow">6-max NLHE / 100BB</p>
+            <p class="eyebrow" id="brandContext">Tournament Trainer</p>
             <h1>Poker Solver Lab</h1>
           </div>
         </div>
-        <nav class="tabs" aria-label="主视图">
-          <button class="tab is-active" type="button" data-view="trainer">训练</button>
-          <button class="tab" type="button" data-view="range">范围</button>
-          <button class="tab" type="button" data-view="odds">赔率</button>
-          <button class="tab" type="button" data-view="notes">笔记</button>
+        <nav class="tabs" aria-label="Primary views">
+          <button class="tab is-active" type="button" data-view="trainer">Trainer</button>
+          <button class="tab" type="button" data-view="range">Range</button>
+          <button class="tab" type="button" data-view="odds">Odds</button>
+          <button class="tab" type="button" data-view="notes">Notes</button>
+          <button class="tab" type="button" data-view="comments">Comments</button>
         </nav>
       </header>
 
       <main class="workspace">
-        <aside class="control-rail" aria-label="训练参数">
+        <aside class="control-rail" aria-label="Training controls">
           <section class="rail-section">
-            <span class="section-label">位置</span>
-            <div class="segmented compact" id="positionButtons"></div>
+            <span class="section-label">Table</span>
+            <div class="segmented compact two-up" id="tableSizeButtons"></div>
           </section>
 
           <section class="rail-section">
-            <span class="section-label">局面</span>
+            <span class="section-label">Effective Stack</span>
+            <div class="stack-control">
+              <input id="stackSize" type="range" min="5" max="80" value="25" />
+              <div class="stack-readout">
+                <strong id="stackSizeValue">25BB</strong>
+                <span id="stackBandLabel">Middle stack</span>
+              </div>
+            </div>
+            <div class="preset-row" id="stackPresetButtons"></div>
+          </section>
+
+          <section class="rail-section">
+            <span class="section-label">Position</span>
+            <div class="segmented compact four-up" id="positionButtons"></div>
+          </section>
+
+          <section class="rail-section">
+            <span class="section-label">Spot</span>
             <div class="segmented stacked" id="spotButtons"></div>
           </section>
 
           <section class="rail-section">
-            <span class="section-label">手牌</span>
+            <span class="section-label">Hand</span>
             <div class="hand-picker">
               <label>
-                高张
+                High card
                 <select id="rankOne"></select>
               </label>
               <label>
-                低张
+                Low card
                 <select id="rankTwo"></select>
               </label>
               <label>
-                类型
+                Shape
                 <select id="suitedness">
-                  <option value="s">同花</option>
-                  <option value="o">非同花</option>
+                  <option value="s">Suited</option>
+                  <option value="o">Offsuit</option>
                 </select>
               </label>
             </div>
-            <button class="ghost-button" type="button" id="usePickedHand">练这手</button>
+            <button class="ghost-button" type="button" id="usePickedHand">Use This Hand</button>
           </section>
 
-          <section class="score-card" aria-label="训练成绩">
+          <section class="rail-section">
+            <span class="section-label">Question Mix</span>
+            <div class="tool-row">
+              <button class="ghost-button strong" type="button" id="randomSpot">Random MTT Spot</button>
+              <button class="ghost-button" type="button" id="sameContextHand">New Hand Same Spot</button>
+            </div>
+          </section>
+
+          <section class="score-card" aria-label="Training results">
             <div>
-              <span>正确率</span>
+              <span>Accuracy</span>
               <strong id="accuracy">0%</strong>
             </div>
             <div>
-              <span>连对</span>
+              <span>Streak</span>
               <strong id="streak">0</strong>
             </div>
             <div>
-              <span>样本</span>
+              <span>Hands</span>
               <strong id="handsPlayed">0</strong>
             </div>
           </section>
         </aside>
 
-        <section class="view is-active" id="trainerView" aria-label="训练">
+        <section class="view is-active" id="trainerView" aria-label="Trainer">
           <div class="trainer-grid">
             <section class="table-zone">
               <div class="felt">
                 <div class="dealer-chip">D</div>
                 <div class="scenario">
-                  <span id="scenarioText">BTN · 首次入池</span>
-                  <strong id="heroHand">AKs</strong>
+                  <span id="scenarioText">8-max · 25BB · HJ · Open</span>
+                  <strong id="heroHand">AJs</strong>
+                  <div class="scenario-meta" id="scenarioMeta"></div>
                 </div>
                 <div class="hole-cards" id="holeCards"></div>
                 <div class="table-line"></div>
@@ -91,11 +118,11 @@
 
             <section class="solver-panel">
               <div class="panel-heading">
-                <span class="section-label">建议</span>
-                <button class="icon-button" type="button" id="nextHand" aria-label="下一手">↻</button>
+                <span class="section-label">Solver Line</span>
+                <button class="icon-button" type="button" id="nextHand" aria-label="Random MTT spot">Shuffle</button>
               </div>
               <div class="result-box" id="resultBox">
-                <p>先选择动作，再看频率和理由。</p>
+                <p>Choose an action, then compare it with the tournament recommendation.</p>
               </div>
               <div class="frequency-bars" id="frequencyBars"></div>
               <div class="explain-box" id="explainBox"></div>
@@ -103,75 +130,108 @@
           </div>
         </section>
 
-        <section class="view" id="rangeView" aria-label="范围">
+        <section class="view" id="rangeView" aria-label="Range">
           <div class="range-layout">
             <section class="matrix-panel">
               <div class="panel-heading">
-                <span class="section-label">起手牌矩阵</span>
-                <span class="pill" id="rangeContext">BTN / 首次入池</span>
+                <span class="section-label">169-Hand Matrix</span>
+                <span class="pill" id="rangeContext">8-max / 25BB / HJ / Open</span>
               </div>
               <div class="matrix" id="rangeMatrix"></div>
             </section>
             <section class="range-detail">
-              <span class="section-label">当前手牌</span>
+              <span class="section-label">Current Combo</span>
               <div class="selected-hand" id="selectedHandDetail"></div>
               <div class="legend">
-                <span><i class="legend-swatch raise"></i> 加注</span>
-                <span><i class="legend-swatch threebet"></i> 再加注</span>
-                <span><i class="legend-swatch call"></i> 跟注</span>
-                <span><i class="legend-swatch mix"></i> 混合</span>
-                <span><i class="legend-swatch fold"></i> 弃牌</span>
+                <span><i class="legend-swatch jam"></i> Jam</span>
+                <span><i class="legend-swatch raise"></i> Raise</span>
+                <span><i class="legend-swatch threebet"></i> 3-bet / 4-bet</span>
+                <span><i class="legend-swatch call"></i> Call</span>
+                <span><i class="legend-swatch mix"></i> Mixed</span>
+                <span><i class="legend-swatch fold"></i> Fold</span>
               </div>
             </section>
           </div>
         </section>
 
-        <section class="view" id="oddsView" aria-label="赔率">
+        <section class="view" id="oddsView" aria-label="Odds">
           <div class="odds-layout">
             <section class="odds-lab">
               <div class="panel-heading">
-                <span class="section-label">赔率实验室</span>
+                <span class="section-label">Pot Odds Lab</span>
                 <span class="pill">Rule of 2 / 4</span>
               </div>
               <div class="slider-row">
-                <label for="potSize">当前底池</label>
+                <label for="potSize">Pot size</label>
                 <input id="potSize" type="range" min="10" max="300" value="80" />
                 <output id="potSizeValue">80BB</output>
               </div>
               <div class="slider-row">
-                <label for="callSize">需要跟注</label>
+                <label for="callSize">Call size</label>
                 <input id="callSize" type="range" min="5" max="120" value="30" />
                 <output id="callSizeValue">30BB</output>
               </div>
               <div class="slider-row">
-                <label for="outs">有效 outs</label>
+                <label for="outs">Clean outs</label>
                 <input id="outs" type="range" min="0" max="21" value="9" />
                 <output id="outsValue">9</output>
               </div>
-              <div class="toggle-row" role="group" aria-label="剩余街数">
-                <button type="button" class="toggle is-active" data-street="two">转牌+河牌</button>
-                <button type="button" class="toggle" data-street="one">只看一张</button>
+              <div class="toggle-row" role="group" aria-label="Streets left">
+                <button type="button" class="toggle is-active" data-street="two">Turn + River</button>
+                <button type="button" class="toggle" data-street="one">One card</button>
               </div>
             </section>
             <section class="odds-output">
               <div class="metric">
-                <span>盈亏平衡胜率</span>
+                <span>Break-even equity</span>
                 <strong id="breakEven">27.3%</strong>
               </div>
               <div class="metric">
-                <span>估算胜率</span>
+                <span>Estimated equity</span>
                 <strong id="equity">36.0%</strong>
               </div>
               <div class="call-meter">
                 <div id="equityNeedle"></div>
               </div>
-              <div class="decision" id="oddsDecision">可跟注</div>
+              <div class="decision" id="oddsDecision">Good call</div>
             </section>
           </div>
         </section>
 
-        <section class="view" id="notesView" aria-label="笔记">
+        <section class="view" id="notesView" aria-label="Notes">
           <div class="notes-grid" id="notesGrid"></div>
+        </section>
+
+        <section class="view" id="commentsView" aria-label="Comments">
+          <section class="feedback-panel">
+            <div class="panel-heading">
+              <span class="section-label">Feedback Wall</span>
+              <span class="pill">Saved in GitHub</span>
+            </div>
+            <p class="feedback-note">
+              People can leave comments here with a GitHub login. If the inline thread does not load,
+              use the GitHub buttons and you can read everything later in the repo.
+            </p>
+            <div class="feedback-actions">
+              <a
+                class="feedback-link"
+                href="https://github.com/bayareamadcow/poker/issues/new?title=Site%20feedback%3A%20Poker%20Solver%20Lab&body=What%20did%20you%20notice%3F%0A%0AWhat%20should%20change%3F%0A"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Leave Feedback
+              </a>
+              <a
+                class="feedback-link secondary"
+                href="https://github.com/bayareamadcow/poker/issues?q=is%3Aissue+sort%3Aupdated-desc"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Read Saved Comments
+              </a>
+            </div>
+            <div class="comment-shell" id="commentsEmbed"></div>
+          </section>
         </section>
       </main>
     </div>
