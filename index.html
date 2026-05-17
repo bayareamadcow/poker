@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Poker Solver Lab</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <img src="assets/chip-stack.svg" alt="" class="brand-mark" />
+          <div>
+            <p class="eyebrow">6-max NLHE / 100BB</p>
+            <h1>Poker Solver Lab</h1>
+          </div>
+        </div>
+        <nav class="tabs" aria-label="主视图">
+          <button class="tab is-active" type="button" data-view="trainer">训练</button>
+          <button class="tab" type="button" data-view="range">范围</button>
+          <button class="tab" type="button" data-view="odds">赔率</button>
+          <button class="tab" type="button" data-view="notes">笔记</button>
+        </nav>
+      </header>
+
+      <main class="workspace">
+        <aside class="control-rail" aria-label="训练参数">
+          <section class="rail-section">
+            <span class="section-label">位置</span>
+            <div class="segmented compact" id="positionButtons"></div>
+          </section>
+
+          <section class="rail-section">
+            <span class="section-label">局面</span>
+            <div class="segmented stacked" id="spotButtons"></div>
+          </section>
+
+          <section class="rail-section">
+            <span class="section-label">手牌</span>
+            <div class="hand-picker">
+              <label>
+                高张
+                <select id="rankOne"></select>
+              </label>
+              <label>
+                低张
+                <select id="rankTwo"></select>
+              </label>
+              <label>
+                类型
+                <select id="suitedness">
+                  <option value="s">同花</option>
+                  <option value="o">非同花</option>
+                </select>
+              </label>
+            </div>
+            <button class="ghost-button" type="button" id="usePickedHand">练这手</button>
+          </section>
+
+          <section class="score-card" aria-label="训练成绩">
+            <div>
+              <span>正确率</span>
+              <strong id="accuracy">0%</strong>
+            </div>
+            <div>
+              <span>连对</span>
+              <strong id="streak">0</strong>
+            </div>
+            <div>
+              <span>样本</span>
+              <strong id="handsPlayed">0</strong>
+            </div>
+          </section>
+        </aside>
+
+        <section class="view is-active" id="trainerView" aria-label="训练">
+          <div class="trainer-grid">
+            <section class="table-zone">
+              <div class="felt">
+                <div class="dealer-chip">D</div>
+                <div class="scenario">
+                  <span id="scenarioText">BTN · 首次入池</span>
+                  <strong id="heroHand">AKs</strong>
+                </div>
+                <div class="hole-cards" id="holeCards"></div>
+                <div class="table-line"></div>
+              </div>
+              <div class="action-row" id="actionButtons"></div>
+            </section>
+
+            <section class="solver-panel">
+              <div class="panel-heading">
+                <span class="section-label">建议</span>
+                <button class="icon-button" type="button" id="nextHand" aria-label="下一手">↻</button>
+              </div>
+              <div class="result-box" id="resultBox">
+                <p>先选择动作，再看频率和理由。</p>
+              </div>
+              <div class="frequency-bars" id="frequencyBars"></div>
+              <div class="explain-box" id="explainBox"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="rangeView" aria-label="范围">
+          <div class="range-layout">
+            <section class="matrix-panel">
+              <div class="panel-heading">
+                <span class="section-label">起手牌矩阵</span>
+                <span class="pill" id="rangeContext">BTN / 首次入池</span>
+              </div>
+              <div class="matrix" id="rangeMatrix"></div>
+            </section>
+            <section class="range-detail">
+              <span class="section-label">当前手牌</span>
+              <div class="selected-hand" id="selectedHandDetail"></div>
+              <div class="legend">
+                <span><i class="legend-swatch raise"></i> 加注</span>
+                <span><i class="legend-swatch threebet"></i> 再加注</span>
+                <span><i class="legend-swatch call"></i> 跟注</span>
+                <span><i class="legend-swatch mix"></i> 混合</span>
+                <span><i class="legend-swatch fold"></i> 弃牌</span>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="oddsView" aria-label="赔率">
+          <div class="odds-layout">
+            <section class="odds-lab">
+              <div class="panel-heading">
+                <span class="section-label">赔率实验室</span>
+                <span class="pill">Rule of 2 / 4</span>
+              </div>
+              <div class="slider-row">
+                <label for="potSize">当前底池</label>
+                <input id="potSize" type="range" min="10" max="300" value="80" />
+                <output id="potSizeValue">80BB</output>
+              </div>
+              <div class="slider-row">
+                <label for="callSize">需要跟注</label>
+                <input id="callSize" type="range" min="5" max="120" value="30" />
+                <output id="callSizeValue">30BB</output>
+              </div>
+              <div class="slider-row">
+                <label for="outs">有效 outs</label>
+                <input id="outs" type="range" min="0" max="21" value="9" />
+                <output id="outsValue">9</output>
+              </div>
+              <div class="toggle-row" role="group" aria-label="剩余街数">
+                <button type="button" class="toggle is-active" data-street="two">转牌+河牌</button>
+                <button type="button" class="toggle" data-street="one">只看一张</button>
+              </div>
+            </section>
+            <section class="odds-output">
+              <div class="metric">
+                <span>盈亏平衡胜率</span>
+                <strong id="breakEven">27.3%</strong>
+              </div>
+              <div class="metric">
+                <span>估算胜率</span>
+                <strong id="equity">36.0%</strong>
+              </div>
+              <div class="call-meter">
+                <div id="equityNeedle"></div>
+              </div>
+              <div class="decision" id="oddsDecision">可跟注</div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="notesView" aria-label="笔记">
+          <div class="notes-grid" id="notesGrid"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
