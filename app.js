@@ -167,6 +167,7 @@ const state = {
   stackBb: 25,
   position: "HJ",
   spot: "open",
+  context: null,
   current: makeHand("A", "J", true),
   selectedKey: "AJs",
   answered: false,
@@ -193,6 +194,7 @@ const el = {
   sameContextHand: document.querySelector("#sameContextHand"),
   scenarioText: document.querySelector("#scenarioText"),
   scenarioMeta: document.querySelector("#scenarioMeta"),
+  contextStrip: document.querySelector("#contextStrip"),
   heroHand: document.querySelector("#heroHand"),
   holeCards: document.querySelector("#holeCards"),
   actionButtons: document.querySelector("#actionButtons"),
@@ -246,6 +248,7 @@ function bindEvents() {
   el.stackSize.addEventListener("input", () => {
     state.stackBb = Number(el.stackSize.value);
     normalizeState();
+    rebuildContext();
     state.answered = false;
     render();
   });
@@ -304,6 +307,7 @@ function renderControls() {
     button.addEventListener("click", () => {
       state.tableSize = Number(button.dataset.table);
       normalizeState();
+      rebuildContext();
       state.answered = false;
       render();
     });
@@ -320,6 +324,7 @@ function renderControls() {
   el.positionButtons.querySelectorAll("button:not([disabled])").forEach((button) => {
     button.addEventListener("click", () => {
       state.position = button.dataset.position;
+      rebuildContext();
       state.answered = false;
       render();
     });
@@ -332,6 +337,7 @@ function renderControls() {
     button.addEventListener("click", () => {
       state.spot = button.dataset.spot;
       normalizeState();
+      rebuildContext();
       state.answered = false;
       render();
     });
@@ -352,6 +358,7 @@ function renderControls() {
   el.stackPresetButtons.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
       state.stackBb = Number(button.dataset.stack);
+      rebuildContext();
       state.answered = false;
       render();
     });
@@ -389,12 +396,14 @@ function renderTrainer() {
   const rec = recommend(state.current.key, state.position, state.spot, state.tableSize, state.stackBb);
   const actions = getSpotActions(state.spot, state.stackBb);
   const lateFlag = isLatePosition(state.position, state.tableSize) ? "Late-position pressure" : "Earlier seat discipline";
+  const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb);
 
   el.scenarioText.textContent = `${tableConfigs[state.tableSize].label} · ${state.stackBb}BB · ${state.position} · ${spot.label}`;
   el.scenarioMeta.innerHTML = `
     <span class="pill ghost">${stackBandLabel(state.stackBb)}</span>
     <span class="pill ghost">${lateFlag}</span>
   `;
+  el.contextStrip.innerHTML = buildContextStrip(context);
   el.heroHand.textContent = state.current.key;
   el.holeCards.innerHTML = state.current.cards.map(renderCard).join("");
   el.actionButtons.innerHTML = actions
@@ -466,6 +475,7 @@ function hiddenProfile(actions) {
 
 function renderRange() {
   const spot = spotById(state.spot);
+  const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb);
   el.rangeContext.textContent = `${tableConfigs[state.tableSize].label} / ${state.stackBb}BB / ${state.position} / ${spot.label}`;
   el.rangeMatrix.innerHTML = allHands
     .map((hand) => {
@@ -488,9 +498,11 @@ function renderRange() {
 
 function renderSelectedHand() {
   const rec = recommend(state.selectedKey, state.position, state.spot, state.tableSize, state.stackBb);
+  const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb);
   el.selectedHandDetail.innerHTML = `
     <strong>${state.selectedKey}</strong>
     <span>${tableConfigs[state.tableSize].label} · ${state.stackBb}BB · ${state.position}</span>
+    <span>${context.summary}</span>
     <p>${rec.primary}${rec.secondary ? `, mix ${rec.secondary}` : ""}. ${rec.note}</p>
   `;
 }
@@ -545,10 +557,6 @@ function renderScore() {
 
 function randomTournamentSpot({ fullRandom = true, preserveScore = false } = {}) {
   if (fullRandom) {
-    state.tableSize = weightedChoice([
-      { value: 6, weight: 43 },
-      { value: 8, weight: 57 },
-    ]);
     state.stackBb = randomTournamentStack();
     state.spot = weightedChoice([
       { value: "open", weight: 46 },
@@ -564,6 +572,9 @@ function randomTournamentSpot({ fullRandom = true, preserveScore = false } = {})
   }
 
   normalizeState();
+  if (fullRandom || !state.context) {
+    rebuildContext();
+  }
   state.current = handFromKey(pickTrainingHand(state.position, state.spot, state.tableSize, state.stackBb, state.selectedKey));
   state.selectedKey = state.current.key;
   state.answered = false;
@@ -820,12 +831,132 @@ function normalizeState() {
   }
 }
 
+function rebuildContext() {
+  state.context = buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb);
+}
+
 function getActivePositions(tableSize) {
   return tableConfigs[tableSize].positions;
 }
 
 function getCandidatePositions(spot, tableSize) {
   return tableConfigs[tableSize].candidates[spot];
+}
+
+function buildSpotContext(heroPosition, spot, tableSize, stackBb) {
+  const positions = getActivePositions(tableSize);
+  const heroIndex = positions.indexOf(heroPosition);
+  const basePot = 2.5;
+  const openSize = chooseOpenSizeBb(heroPosition, stackBb);
+
+  if (spot === "open") {
+    const posted = blindPosted(heroPosition);
+    const potBeforeHero = basePot;
+    const potAfterOpen = basePot + (openSize - posted);
+    return {
+      heroPosition,
+      spot,
+      openSize,
+      potBb: roundBb(potAfterOpen),
+      toCallBb: 0,
+      summary: `Unopened pot ${formatBb(potBeforeHero)} · Open to ${formatBb(openSize)}`,
+      lines: [
+        { label: "Pot", value: formatBb(potBeforeHero) },
+        { label: "Action", value: `Open ${formatBb(openSize)}` },
+        { label: "After open", value: formatBb(potAfterOpen) },
+      ],
+    };
+  }
+
+  if (spot === "vsRaise") {
+    const openerCandidates = positions.slice(0, heroIndex).filter((position) => position !== "BB");
+    const openerPosition = openerCandidates.length ? openerCandidates[randomInt(0, openerCandidates.length - 1)] : positions[0];
+    const openerPosted = blindPosted(openerPosition);
+    const heroPosted = blindPosted(heroPosition);
+    const potBb = roundBb(basePot + (openSize - openerPosted));
+    const toCallBb = roundBb(openSize - heroPosted);
+    return {
+      heroPosition,
+      openerPosition,
+      spot,
+      openSize,
+      potBb,
+      toCallBb,
+      summary: `${openerPosition} opens ${formatBb(openSize)} · Pot ${formatBb(potBb)} · Call ${formatBb(toCallBb)}`,
+      lines: [
+        { label: "Open", value: `${openerPosition} ${formatBb(openSize)}` },
+        { label: "Pot", value: formatBb(potBb) },
+        { label: "To call", value: formatBb(toCallBb) },
+      ],
+    };
+  }
+
+  const openerPosition = heroPosition;
+  const threeBettorCandidates = positions.slice(heroIndex + 1).filter((position) => position !== "BB" || heroPosition !== "SB");
+  const threeBettorPosition = threeBettorCandidates.length
+    ? threeBettorCandidates[randomInt(0, threeBettorCandidates.length - 1)]
+    : positions[Math.min(heroIndex + 1, positions.length - 1)];
+  const threeBetSize = chooseThreeBetSizeBb(openSize, openerPosition, threeBettorPosition, tableSize, stackBb);
+  const openerPosted = blindPosted(openerPosition);
+  const aggressorPosted = blindPosted(threeBettorPosition);
+  const potAfterOpen = basePot + (openSize - openerPosted);
+  const potBb = roundBb(potAfterOpen + (threeBetSize - aggressorPosted));
+  const toCallBb = roundBb(threeBetSize - openSize);
+
+  return {
+    heroPosition,
+    openerPosition,
+    threeBettorPosition,
+    spot,
+    openSize,
+    threeBetSize,
+    potBb,
+    toCallBb,
+    summary: `${threeBettorPosition} 3-bets ${formatBb(threeBetSize)} · Pot ${formatBb(potBb)} · Call ${formatBb(toCallBb)}`,
+    lines: [
+      { label: "Open", value: `${heroPosition} ${formatBb(openSize)}` },
+      { label: "3-bet", value: `${threeBettorPosition} ${formatBb(threeBetSize)}` },
+      { label: "To call", value: formatBb(toCallBb) },
+    ],
+  };
+}
+
+function chooseOpenSizeBb(position, stackBb) {
+  if (position === "SB") {
+    if (stackBb <= 10) return 2;
+    if (stackBb <= 25) return 2.3;
+    return 2.5;
+  }
+
+  if (stackBb <= 10) return 2;
+  if (stackBb <= 20) return 2.1;
+  if (stackBb <= 40) return 2.2;
+  return 2.3;
+}
+
+function chooseThreeBetSizeBb(openSize, openerPosition, aggressorPosition, tableSize, stackBb) {
+  const inPosition = positionLeverage(aggressorPosition, tableSize) > positionLeverage(openerPosition, tableSize);
+  const multiplier = stackBb <= 18 ? (inPosition ? 2.5 : 3) : inPosition ? 2.8 : 3.4;
+  return roundBb(Math.min(stackBb, Math.max(openSize * multiplier, openSize + 3)));
+}
+
+function blindPosted(position) {
+  if (position === "SB") return 0.5;
+  if (position === "BB") return 1;
+  return 0;
+}
+
+function buildContextStrip(context) {
+  return context.lines
+    .map(
+      (line) => `
+        <div class="context-chip">
+          <span>${line.label}</span>
+          <strong>${line.value}</strong>
+        </div>
+      `,
+    )
+    .join("");
 }
 
 function spotById(spotId) {
@@ -1077,6 +1208,14 @@ function weightedChoice(entries) {
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function roundBb(value) {
+  return Math.round(value * 10) / 10;
+}
+
+function formatBb(value) {
+  return `${roundBb(value).toFixed(1)}BB`;
 }
 
 function formatPct(value) {
