@@ -7,6 +7,26 @@ const suits = [
   { symbol: "\u2663", name: "club", red: false },
 ];
 const rankValue = Object.fromEntries(ranks.map((rank, index) => [rank, 14 - index]));
+const seatLayouts = {
+  6: [
+    { x: 50, y: 83, align: "center" },
+    { x: 76, y: 69, align: "right" },
+    { x: 81, y: 36, align: "right" },
+    { x: 50, y: 20, align: "center" },
+    { x: 19, y: 36, align: "left" },
+    { x: 24, y: 69, align: "left" },
+  ],
+  8: [
+    { x: 50, y: 83, align: "center" },
+    { x: 70, y: 77, align: "right" },
+    { x: 82, y: 58, align: "right" },
+    { x: 79, y: 31, align: "right" },
+    { x: 50, y: 18, align: "center" },
+    { x: 21, y: 31, align: "left" },
+    { x: 18, y: 58, align: "left" },
+    { x: 30, y: 77, align: "left" },
+  ],
+};
 
 const tableConfigs = {
   6: {
@@ -16,6 +36,7 @@ const tableConfigs = {
       open: ["UTG", "HJ", "CO", "BTN", "SB"],
       vsRaise: ["HJ", "CO", "BTN", "SB", "BB"],
       vs3bet: ["UTG", "HJ", "CO", "BTN", "SB"],
+      flopVsCbet: ["HJ", "CO", "BTN", "SB", "BB"],
     },
   },
   8: {
@@ -25,6 +46,7 @@ const tableConfigs = {
       open: ["UTG", "UTG+1", "LJ", "HJ", "CO", "BTN", "SB"],
       vsRaise: ["UTG+1", "LJ", "HJ", "CO", "BTN", "SB", "BB"],
       vs3bet: ["UTG", "UTG+1", "LJ", "HJ", "CO", "BTN", "SB"],
+      flopVsCbet: ["UTG+1", "LJ", "HJ", "CO", "BTN", "SB", "BB"],
     },
   },
 };
@@ -34,6 +56,7 @@ const spots = [
   { id: "open", label: "Open First In" },
   { id: "vsRaise", label: "Facing Raise" },
   { id: "vs3bet", label: "Facing 3-bet" },
+  { id: "flopVsCbet", label: "Flop vs C-bet" },
 ];
 
 const rangeText = {
@@ -153,8 +176,8 @@ const notes = [
     body: "If a combo flips between two actions, treat that as a frequency problem. Use the matrix to see whether a hand is a pure continue, a pure fold, or a tournament mix.",
   },
   {
-    title: "Feedback wall",
-    body: "The comments page stores feedback in GitHub so you can read it later from any device, even after people visit the public Pages link.",
+    title: "Why no call",
+    body: "Open-first-in spots do not show call because nobody has entered the pot yet. Call appears once you face an open, a 3-bet, or a flop c-bet.",
   },
 ];
 
@@ -192,8 +215,13 @@ const el = {
   usePickedHand: document.querySelector("#usePickedHand"),
   randomSpot: document.querySelector("#randomSpot"),
   sameContextHand: document.querySelector("#sameContextHand"),
+  dealerChip: document.querySelector(".dealer-chip"),
   scenarioText: document.querySelector("#scenarioText"),
   scenarioMeta: document.querySelector("#scenarioMeta"),
+  tableSeats: document.querySelector("#tableSeats"),
+  boardWrap: document.querySelector("#boardWrap"),
+  boardLabel: document.querySelector("#boardLabel"),
+  boardCards: document.querySelector("#boardCards"),
   contextStrip: document.querySelector("#contextStrip"),
   heroHand: document.querySelector("#heroHand"),
   holeCards: document.querySelector("#holeCards"),
@@ -259,6 +287,7 @@ function bindEvents() {
     const suited = first !== second && el.suitedness.value === "s";
     state.current = makeHand(first, second, suited);
     state.selectedKey = state.current.key;
+    rebuildContext(state.current);
     state.answered = false;
     render();
   });
@@ -393,16 +422,19 @@ function syncSuitedAvailability() {
 
 function renderTrainer() {
   const spot = spotById(state.spot);
-  const rec = recommend(state.current.key, state.position, state.spot, state.tableSize, state.stackBb);
+  const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, state.current);
+  const rec = recommend(state.current.key, state.position, state.spot, state.tableSize, state.stackBb, context);
   const actions = getSpotActions(state.spot, state.stackBb);
   const lateFlag = isLatePosition(state.position, state.tableSize) ? "Late-position pressure" : "Earlier seat discipline";
-  const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb);
+  const actionNote = trainerActionNote(state.spot, context, actions);
 
   el.scenarioText.textContent = `${tableConfigs[state.tableSize].label} · ${state.stackBb}BB · ${state.position} · ${spot.label}`;
   el.scenarioMeta.innerHTML = `
     <span class="pill ghost">${stackBandLabel(state.stackBb)}</span>
     <span class="pill ghost">${lateFlag}</span>
+    <span class="pill ghost">${actionNote}</span>
   `;
+  renderTableScene(context);
   el.contextStrip.innerHTML = buildContextStrip(context);
   el.heroHand.textContent = state.current.key;
   el.holeCards.innerHTML = state.current.cards.map(renderCard).join("");
@@ -416,11 +448,49 @@ function renderTrainer() {
   if (!state.answered) {
     el.resultBox.innerHTML = "<p>Choose an action, then compare it with the tournament recommendation.</p>";
     el.frequencyBars.innerHTML = renderBars(hiddenProfile(actions));
-    el.explainBox.innerHTML = "<p>Random MTT mode now mixes table size, stack depth, position, and more realistic short-stack action choices.</p>";
+    el.explainBox.innerHTML = `<p>${spotHint(state.spot, context)}</p>`;
     return;
   }
 
   renderRecommendation(rec);
+}
+
+function trainerActionNote(spot, context, actions) {
+  if (spot === "open") return "No call in unopened pot";
+  if (!actions.includes("Call")) return `${state.stackBb}BB is jam-or-fold here`;
+  if (spot === "flopVsCbet") return `Facing ${formatBb(context.betSize)} c-bet`;
+  return "Call unlocks once you face action";
+}
+
+function spotHint(spot, context) {
+  if (spot === "open") {
+    return "Open spots do not show Call because nobody has entered the pot yet. Once you face an open, a 3-bet, or a flop c-bet, Call comes back into the action row.";
+  }
+
+  if (spot === "flopVsCbet") {
+    return `You called preflop, the flop is ${boardText(context.board)}, and the opener fires ${formatBb(context.betSize)} into ${formatBb(context.potBeforeBet)}. Use pair strength, draws, and position to decide between fold, call, and raise.`;
+  }
+
+  if ((spot === "vsRaise" || spot === "vs3bet") && !getSpotActions(state.spot, state.stackBb).includes("Call")) {
+    return `At ${state.stackBb}BB this branch is intentionally jam-or-fold. That is why Call disappears even though you are facing action. The trainer is pushing the shorter-stack tournament response instead of a flatting line.`;
+  }
+
+  return "Tournament spots mix table size, stack depth, position, and pressure. Look at who opened, how big they made it, and how much you must continue for.";
+}
+
+function renderTableScene(context) {
+  el.tableSeats.innerHTML = buildSeatMarkup(context);
+  positionDealerChip();
+  const hasBoard = Array.isArray(context.board) && context.board.length > 0;
+  el.boardWrap.classList.toggle("is-hidden", !hasBoard);
+  if (!hasBoard) {
+    el.boardLabel.textContent = "";
+    el.boardCards.innerHTML = "";
+    return;
+  }
+
+  el.boardLabel.textContent = context.boardLabel || "Flop";
+  el.boardCards.innerHTML = context.board.map((card) => renderCard(card, "board-card")).join("");
 }
 
 function chooseAction(action, rec) {
@@ -475,11 +545,11 @@ function hiddenProfile(actions) {
 
 function renderRange() {
   const spot = spotById(state.spot);
-  const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb);
+  const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, state.current);
   el.rangeContext.textContent = `${tableConfigs[state.tableSize].label} / ${state.stackBb}BB / ${state.position} / ${spot.label}`;
   el.rangeMatrix.innerHTML = allHands
     .map((hand) => {
-      const rec = recommend(hand.key, state.position, state.spot, state.tableSize, state.stackBb);
+      const rec = recommend(hand.key, state.position, state.spot, state.tableSize, state.stackBb, context);
       const className = cellClass(rec);
       const selected = hand.key === state.selectedKey ? " is-selected" : "";
       return `<button type="button" class="${className}${selected}" data-hand="${hand.key}" aria-label="${hand.key} ${rec.primary}">${hand.key}</button>`;
@@ -489,6 +559,9 @@ function renderRange() {
     button.addEventListener("click", () => {
       state.selectedKey = button.dataset.hand;
       state.current = handFromKey(state.selectedKey);
+      if (state.spot === "flopVsCbet" && state.context?.board && cardsOverlap(state.current.cards, state.context.board)) {
+        rebuildContext(state.current);
+      }
       state.answered = false;
       render();
     });
@@ -497,12 +570,13 @@ function renderRange() {
 }
 
 function renderSelectedHand() {
-  const rec = recommend(state.selectedKey, state.position, state.spot, state.tableSize, state.stackBb);
-  const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb);
+  const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, state.current);
+  const rec = recommend(state.selectedKey, state.position, state.spot, state.tableSize, state.stackBb, context);
   el.selectedHandDetail.innerHTML = `
     <strong>${state.selectedKey}</strong>
     <span>${tableConfigs[state.tableSize].label} · ${state.stackBb}BB · ${state.position}</span>
     <span>${context.summary}</span>
+    ${context.board ? `<span>Board ${boardText(context.board)}</span>` : ""}
     <p>${rec.primary}${rec.secondary ? `, mix ${rec.secondary}` : ""}. ${rec.note}</p>
   `;
 }
@@ -559,9 +633,10 @@ function randomTournamentSpot({ fullRandom = true, preserveScore = false } = {})
   if (fullRandom) {
     state.stackBb = randomTournamentStack();
     state.spot = weightedChoice([
-      { value: "open", weight: 46 },
-      { value: "vsRaise", weight: 36 },
-      { value: "vs3bet", weight: 18 },
+      { value: "open", weight: 38 },
+      { value: "vsRaise", weight: 30 },
+      { value: "vs3bet", weight: 14 },
+      { value: "flopVsCbet", weight: 18 },
     ]);
     state.position = weightedChoice(
       getCandidatePositions(state.spot, state.tableSize).map((position, index, list) => ({
@@ -572,11 +647,18 @@ function randomTournamentSpot({ fullRandom = true, preserveScore = false } = {})
   }
 
   normalizeState();
-  if (fullRandom || !state.context) {
-    rebuildContext();
-  }
   state.current = handFromKey(pickTrainingHand(state.position, state.spot, state.tableSize, state.stackBb, state.selectedKey));
+  if (!fullRandom && state.spot === "flopVsCbet" && state.context?.board) {
+    let guard = 0;
+    while (cardsOverlap(state.current.cards, state.context.board) && guard < 12) {
+      state.current = handFromKey(pickTrainingHand(state.position, state.spot, state.tableSize, state.stackBb, state.current.key));
+      guard += 1;
+    }
+  }
   state.selectedKey = state.current.key;
+  if (fullRandom || !state.context) {
+    rebuildContext(state.current);
+  }
   state.answered = false;
   if (!preserveScore) {
     renderScore();
@@ -614,6 +696,10 @@ function trainingWeight(rec, strength, key, spot, stackBb) {
 }
 
 function getSpotActions(spotId, stackBb) {
+  if (spotId === "flopVsCbet") {
+    return ["Fold", "Call", "Raise"];
+  }
+
   if (spotId === "open") {
     if (stackBb <= 11) return ["Fold", "Jam"];
     if (stackBb <= 20) return ["Fold", "Raise", "Jam"];
@@ -631,7 +717,7 @@ function getSpotActions(spotId, stackBb) {
   return ["Fold", "Call", "4-bet"];
 }
 
-function recommend(key, position, spot, tableSize, stackBb) {
+function recommend(key, position, spot, tableSize, stackBb, context = null) {
   const actions = getSpotActions(spot, stackBb);
   const traits = inspectHand(key);
   const strength = handStrength(key);
@@ -641,6 +727,10 @@ function recommend(key, position, spot, tableSize, stackBb) {
   const fourBetSet = ranges[tableSize].fourBet[position] || new Set();
   const call3betSet = ranges[tableSize].call3bet[position] || new Set();
   const positionLift = positionLeverage(position, tableSize);
+
+  if (spot === "flopVsCbet") {
+    return recommendFlopVsCbet(key, actions, context);
+  }
 
   if (spot === "open") {
     const cutoff = openThreshold(position, tableSize) + shallowOpenPenalty(stackBb, position, tableSize);
@@ -764,6 +854,306 @@ function recommend(key, position, spot, tableSize, stackBb) {
   return foldRec(actions, "Versus a 3-bet, this combo is not strong enough to continue once tournament stack pressure is factored in.");
 }
 
+function recommendFlopVsCbet(key, actions, context = null) {
+  const spotContext = context?.board ? context : state.context?.spot === "flopVsCbet" ? state.context : null;
+  if (!spotContext?.board) {
+    const strength = handStrength(key);
+    if (strength >= 86) return actionRec(actions, "Raise", "Call", 56, "Strong made hands and premium draws want to continue aggressively on many flops.");
+    if (strength >= 66) return actionRec(actions, "Call", "", 100, "Middle-strength hands continue comfortably once there is a flop and a c-bet to respond to.");
+    return foldRec(actions, "Without enough pair value, draw value, or clean overcards, this combo lets go versus the flop c-bet.");
+  }
+
+  const heroCards = key === state.current.key ? state.current.cards : cardsFromKeyForBoard(key, spotContext.board);
+  const flop = analyzeFlopHand(heroCards, spotContext.board);
+  const smallBet = spotContext.betFraction <= 0.34;
+
+  if (flop.monster || flop.comboRaise || (flop.overpair && !flop.boardPaired)) {
+    return actionRec(
+      actions,
+      "Raise",
+      "Call",
+      flop.monster ? 68 : 55,
+      flop.monster
+        ? "You connected hard enough with this flop to build the pot now. Raising captures value while still protecting against turn cards."
+        : "This is strong enough to mix between call and raise. The hand benefits from denying equity and keeping pressure on the c-bettor.",
+    );
+  }
+
+  if (flop.strongContinue) {
+    return actionRec(
+      actions,
+      "Call",
+      flop.canRaiseMix ? "Raise" : "",
+      flop.canRaiseMix ? 72 : 100,
+      "This hand has enough showdown value or draw equity to continue. Calling keeps weaker hands in while avoiding overplaying the medium-strength part of range.",
+    );
+  }
+
+  if (smallBet && flop.lightContinue) {
+    return actionRec(
+      actions,
+      "Call",
+      "Fold",
+      58,
+      "The sizing is small enough that overcards, gutshots, and backdoor equity can continue some of the time, especially when you will realize turns in position.",
+    );
+  }
+
+  return foldRec(actions, "This misses too hard against the flop c-bet. Without pair value, a real draw, or enough future equity, the clean tournament response is to fold.");
+}
+
+function analyzeFlopHand(heroCards, board) {
+  const heroValues = heroCards.map((card) => rankValue[card.rank]).sort((a, b) => b - a);
+  const boardValues = board.map((card) => rankValue[card.rank]).sort((a, b) => b - a);
+  const combined = [...heroCards, ...board];
+  const combinedValues = combined.map((card) => rankValue[card.rank]);
+  const counts = new Map();
+  const boardCounts = new Map();
+
+  combinedValues.forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
+  boardValues.forEach((value) => boardCounts.set(value, (boardCounts.get(value) || 0) + 1));
+
+  const heroMatches = heroValues.filter((value) => boardValues.includes(value));
+  const matchedRanks = [...new Set(heroMatches)];
+  const pocketPair = heroValues[0] === heroValues[1];
+  const topBoard = boardValues[0];
+  const secondBoard = boardValues[1];
+  const bottomBoard = boardValues[2];
+  const boardPaired = new Set(boardValues).size < boardValues.length;
+
+  const madeStraightProfile = detectStraightProfile(combinedValues);
+  const heroSuitCounts = new Map();
+  const suitCounts = new Map();
+  combined.forEach((card) => suitCounts.set(card.suit.name, (suitCounts.get(card.suit.name) || 0) + 1));
+  heroCards.forEach((card) => heroSuitCounts.set(card.suit.name, (heroSuitCounts.get(card.suit.name) || 0) + 1));
+
+  let flushDraw = false;
+  let nutFlushDraw = false;
+  let backdoorFlush = false;
+  for (const [suitName, total] of suitCounts.entries()) {
+    const heroSuit = heroSuitCounts.get(suitName) || 0;
+    if (!heroSuit) continue;
+    if (total >= 4) {
+      flushDraw = true;
+      if (heroCards.some((card) => card.suit.name === suitName && card.rank === "A")) {
+        nutFlushDraw = true;
+      }
+    } else if (total === 3) {
+      backdoorFlush = true;
+    }
+  }
+
+  const set = pocketPair && boardValues.includes(heroValues[0]);
+  const trips = !pocketPair && matchedRanks.some((value) => counts.get(value) >= 3);
+  const twoPair = !pocketPair && matchedRanks.length >= 2;
+  const overpair = pocketPair && heroValues[0] > topBoard && !set;
+  const topPair = matchedRanks.includes(topBoard);
+  const secondPair = !topPair && matchedRanks.includes(secondBoard);
+  const underPair = pocketPair && heroValues[0] < topBoard && heroValues[0] > bottomBoard;
+  const topPairTopKicker = topPair && heroValues.includes(14);
+  const madeStraight = madeStraightProfile.madeStraight;
+  const openEnded = !madeStraight && madeStraightProfile.openEnded;
+  const gutshot = !madeStraight && madeStraightProfile.gutshot;
+  const twoOvercards = !pocketPair && heroValues[0] > topBoard && heroValues[1] > topBoard;
+  const oneOvercard = !pocketPair && heroValues.some((value) => value > topBoard);
+  const comboDraw = flushDraw && (openEnded || gutshot);
+  const monster = set || trips || twoPair || madeStraight;
+  const comboRaise = comboDraw || (topPair && flushDraw) || (topPair && openEnded) || nutFlushDraw;
+  const strongContinue =
+    overpair ||
+    topPair ||
+    secondPair ||
+    underPair ||
+    flushDraw ||
+    openEnded ||
+    comboDraw ||
+    nutFlushDraw;
+  const lightContinue = gutshot || twoOvercards || (oneOvercard && backdoorFlush);
+
+  return {
+    boardPaired,
+    overpair,
+    topPair,
+    topPairTopKicker,
+    secondPair,
+    underPair,
+    flushDraw,
+    nutFlushDraw,
+    backdoorFlush,
+    openEnded,
+    gutshot,
+    comboDraw,
+    comboRaise,
+    strongContinue: strongContinue || topPairTopKicker,
+    canRaiseMix: comboRaise || (topPairTopKicker && !boardPaired),
+    lightContinue,
+    monster,
+  };
+}
+
+function detectStraightProfile(values) {
+  const set = new Set(values);
+  if (set.has(14)) set.add(1);
+
+  let madeStraight = false;
+  let openEnded = false;
+  let gutshot = false;
+  for (let start = 1; start <= 10; start += 1) {
+    const sequence = [start, start + 1, start + 2, start + 3, start + 4];
+    const present = sequence.filter((value) => set.has(value));
+    if (present.length === 5) {
+      madeStraight = true;
+      continue;
+    }
+    if (present.length !== 4) continue;
+    const missing = sequence.find((value) => !set.has(value));
+    if (missing === start || missing === start + 4) {
+      openEnded = true;
+    } else {
+      gutshot = true;
+    }
+  }
+
+  return { madeStraight, openEnded, gutshot };
+}
+
+function buildSeatMarkup(context) {
+  const positions = getActivePositions(state.tableSize);
+  const heroIndex = positions.indexOf(state.position);
+  return positions
+    .map((position, index) => {
+      const relativeIndex = (index - heroIndex + positions.length) % positions.length;
+      const seat = seatLayouts[state.tableSize][relativeIndex];
+      const seatState = describeSeat(position, context);
+      return `
+        <div class="seat ${seatState.tone} ${position === state.position ? "hero" : ""} align-${seat.align}" style="--seat-x:${seat.x}%; --seat-y:${seat.y}%;">
+          <div class="seat-label">${position}</div>
+          <div class="seat-stack">${state.stackBb}BB</div>
+          <div class="seat-action">${seatState.status}</div>
+          ${seatState.showCards ? `<div class="mini-cards">${renderCardBack()}${renderCardBack()}</div>` : ""}
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function positionDealerChip() {
+  const positions = getActivePositions(state.tableSize);
+  const heroIndex = positions.indexOf(state.position);
+  const buttonIndex = positions.indexOf("BTN");
+  const relativeIndex = (buttonIndex - heroIndex + positions.length) % positions.length;
+  const seat = seatLayouts[state.tableSize][relativeIndex];
+  el.dealerChip.style.left = `${seat.x}%`;
+  el.dealerChip.style.top = `${seat.y}%`;
+}
+
+function describeSeat(position, context) {
+  const posted = blindPosted(position);
+  if (position === state.position) {
+    if (context.spot === "vs3bet") return { status: `Opened ${formatBb(context.openSize)}`, tone: "hero" };
+    if (context.spot === "flopVsCbet") return { status: "Hero to act", tone: "hero" };
+    return { status: "Hero to act", tone: "hero" };
+  }
+
+  if (context.spot === "vsRaise" && position === context.openerPosition) {
+    return { status: `Open ${formatBb(context.openSize)}`, tone: "aggressor", showCards: true };
+  }
+
+  if (context.spot === "vs3bet" && position === context.threeBettorPosition) {
+    return { status: `3-bet ${formatBb(context.threeBetSize)}`, tone: "aggressor", showCards: true };
+  }
+
+  if (context.spot === "flopVsCbet" && position === context.openerPosition) {
+    return { status: `Bet ${formatBb(context.betSize)}`, tone: "aggressor", showCards: true };
+  }
+
+  if (posted > 0) {
+    return { status: `${position} ${formatBb(posted)}`, tone: "blind" };
+  }
+
+  return { status: "Waiting", tone: "idle" };
+}
+
+function renderCardBack() {
+  return '<span class="card-back" aria-hidden="true"></span>';
+}
+
+function drawRandomCards(count, excludedCards = []) {
+  const blocked = new Set(excludedCards.map(cardId));
+  const deck = [];
+
+  ranks.forEach((rank) => {
+    suits.forEach((suit) => {
+      const card = { rank, suit };
+      if (!blocked.has(cardId(card))) {
+        deck.push(card);
+      }
+    });
+  });
+
+  const picks = [];
+  for (let index = 0; index < count && deck.length; index += 1) {
+    const pickIndex = randomInt(0, deck.length - 1);
+    picks.push(deck[pickIndex]);
+    deck.splice(pickIndex, 1);
+  }
+  return picks;
+}
+
+function cardsFromKeyForBoard(key, board) {
+  const parsed = parseHandKey(key);
+  const blocked = new Set(board.map(cardId));
+  const suitsByBoard = [...new Set(board.map((card) => card.suit.name))];
+  const preferredSuit = suitsByBoard[0] || suits[0].name;
+
+  if (parsed.high === parsed.low) {
+    const pairCards = suits
+      .map((suit) => ({ rank: parsed.high, suit }))
+      .filter((card) => !blocked.has(cardId(card)))
+      .slice(0, 2);
+    if (pairCards.length === 2) return pairCards;
+  }
+
+  if (parsed.suited) {
+    const suitOrder = [preferredSuit, ...suits.map((suit) => suit.name).filter((name) => name !== preferredSuit)];
+    for (const suitName of suitOrder) {
+      const suit = suits.find((entry) => entry.name === suitName);
+      const first = { rank: parsed.high, suit };
+      const second = { rank: parsed.low, suit };
+      if (!blocked.has(cardId(first)) && !blocked.has(cardId(second))) {
+        return [first, second];
+      }
+    }
+  }
+
+  const first = suits
+    .map((suit) => ({ rank: parsed.high, suit }))
+    .find((card) => !blocked.has(cardId(card)));
+  const second = suits
+    .map((suit) => ({ rank: parsed.low, suit }))
+    .find((card) => !blocked.has(cardId(card)) && suitId(card.suit) !== suitId(first?.suit));
+
+  if (first && second) return [first, second];
+  return makeHand(parsed.high, parsed.low, parsed.suited).cards;
+}
+
+function cardsOverlap(firstCards, secondCards) {
+  const blocked = new Set(firstCards.map(cardId));
+  return secondCards.some((card) => blocked.has(cardId(card)));
+}
+
+function boardText(board) {
+  return board.map((card) => `${card.rank}${card.suit.symbol}`).join(" ");
+}
+
+function cardId(card) {
+  return `${card.rank}${card.suit.name}`;
+}
+
+function suitId(suit) {
+  return suit?.name || "";
+}
+
 function actionRec(actions, primary, secondary, primaryFreq, note) {
   const distribution = {};
 
@@ -831,8 +1221,8 @@ function normalizeState() {
   }
 }
 
-function rebuildContext() {
-  state.context = buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb);
+function rebuildContext(heroHand = state.current) {
+  state.context = buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, heroHand);
 }
 
 function getActivePositions(tableSize) {
@@ -843,7 +1233,7 @@ function getCandidatePositions(spot, tableSize) {
   return tableConfigs[tableSize].candidates[spot];
 }
 
-function buildSpotContext(heroPosition, spot, tableSize, stackBb) {
+function buildSpotContext(heroPosition, spot, tableSize, stackBb, heroHand = state.current) {
   const positions = getActivePositions(tableSize);
   const heroIndex = positions.indexOf(heroPosition);
   const basePot = 2.5;
@@ -887,6 +1277,44 @@ function buildSpotContext(heroPosition, spot, tableSize, stackBb) {
         { label: "Open", value: `${openerPosition} ${formatBb(openSize)}` },
         { label: "Pot", value: formatBb(potBb) },
         { label: "To call", value: formatBb(toCallBb) },
+      ],
+    };
+  }
+
+  if (spot === "flopVsCbet") {
+    const openerCandidates = positions.slice(0, heroIndex).filter((position) => position !== "BB");
+    const openerPosition = openerCandidates.length ? openerCandidates[randomInt(0, openerCandidates.length - 1)] : positions[0];
+    const openerPosted = blindPosted(openerPosition);
+    const heroPosted = blindPosted(heroPosition);
+    const preflopPotBb = roundBb(basePot + (openSize - openerPosted) + (openSize - heroPosted));
+    const board = drawRandomCards(3, heroHand?.cards || []);
+    const betFraction = weightedChoice([
+      { value: 0.33, weight: 48 },
+      { value: 0.5, weight: 34 },
+      { value: 0.66, weight: 18 },
+    ]);
+    const betSize = roundBb(Math.max(1, preflopPotBb * betFraction));
+    const potBb = roundBb(preflopPotBb + betSize);
+    return {
+      heroPosition,
+      openerPosition,
+      villainPosition: openerPosition,
+      spot,
+      street: "flop",
+      openSize,
+      board,
+      boardLabel: "Flop",
+      betFraction,
+      betSize,
+      potBeforeBet: preflopPotBb,
+      potBb,
+      toCallBb: betSize,
+      summary: `${openerPosition} opens ${formatBb(openSize)} 路 Hero calls 路 Flop ${boardText(board)} 路 Bet ${formatBb(betSize)}`,
+      lines: [
+        { label: "Preflop", value: `${openerPosition} open / Hero call` },
+        { label: "Flop", value: boardText(board) },
+        { label: "Bet", value: formatBb(betSize) },
+        { label: "To call", value: formatBb(betSize) },
       ],
     };
   }
@@ -1027,10 +1455,10 @@ function randomTournamentStack() {
   return randomInt(band[0], band[1]);
 }
 
-function renderCard(card) {
+function renderCard(card, extraClass = "") {
   const colorClass = card.suit.red ? "red" : "";
   return `
-    <div class="playing-card ${colorClass}">
+    <div class="playing-card ${colorClass} ${extraClass}">
       <div class="card-corner"><span>${card.rank}</span><span>${card.suit.symbol}</span></div>
       <div class="card-center">${card.suit.symbol}</div>
       <div class="card-corner card-bottom"><span>${card.rank}</span><span>${card.suit.symbol}</span></div>
