@@ -59,6 +59,23 @@ const spots = [
   { id: "flopVsCbet", label: "Flop vs C-bet" },
 ];
 
+const blindBattleSpots = new Set(["vsRaise", "flopVsCbet"]);
+
+const realisticPositionWeights = {
+  6: {
+    open: { UTG: 5, HJ: 12, CO: 24, BTN: 38, SB: 21 },
+    vsRaise: { HJ: 4, CO: 9, BTN: 16, SB: 19, BB: 52 },
+    vs3bet: { UTG: 5, HJ: 12, CO: 23, BTN: 41, SB: 19 },
+    flopVsCbet: { HJ: 5, CO: 9, BTN: 12, SB: 19, BB: 55 },
+  },
+  8: {
+    open: { UTG: 3, "UTG+1": 4, LJ: 7, HJ: 11, CO: 22, BTN: 36, SB: 17 },
+    vsRaise: { "UTG+1": 2, LJ: 3, HJ: 5, CO: 8, BTN: 14, SB: 18, BB: 50 },
+    vs3bet: { UTG: 3, "UTG+1": 4, LJ: 7, HJ: 12, CO: 22, BTN: 37, SB: 15 },
+    flopVsCbet: { "UTG+1": 2, LJ: 3, HJ: 4, CO: 8, BTN: 12, SB: 18, BB: 53 },
+  },
+};
+
 const rangeText = {
   6: {
     open: {
@@ -198,6 +215,8 @@ const state = {
   played: 0,
   streak: 0,
   streetMode: "two",
+  runout: null,
+  forcedOpener: null,
 };
 
 const el = {
@@ -216,6 +235,7 @@ const el = {
   randomSpot: document.querySelector("#randomSpot"),
   sameContextHand: document.querySelector("#sameContextHand"),
   dealerChip: document.querySelector(".dealer-chip"),
+  potBadge: document.querySelector("#potBadge"),
   scenarioText: document.querySelector("#scenarioText"),
   scenarioMeta: document.querySelector("#scenarioMeta"),
   tableSeats: document.querySelector("#tableSeats"),
@@ -229,6 +249,8 @@ const el = {
   resultBox: document.querySelector("#resultBox"),
   frequencyBars: document.querySelector("#frequencyBars"),
   explainBox: document.querySelector("#explainBox"),
+  playOutHand: document.querySelector("#playOutHand"),
+  runoutBox: document.querySelector("#runoutBox"),
   nextHand: document.querySelector("#nextHand"),
   accuracy: document.querySelector("#accuracy"),
   streak: document.querySelector("#streak"),
@@ -276,6 +298,7 @@ function bindEvents() {
   el.stackSize.addEventListener("input", () => {
     state.stackBb = Number(el.stackSize.value);
     normalizeState();
+    state.runout = null;
     rebuildContext();
     state.answered = false;
     render();
@@ -295,6 +318,7 @@ function bindEvents() {
   el.randomSpot.addEventListener("click", () => randomTournamentSpot({ fullRandom: true }));
   el.sameContextHand.addEventListener("click", () => randomTournamentSpot({ fullRandom: false }));
   el.nextHand.addEventListener("click", () => randomTournamentSpot({ fullRandom: true }));
+  el.playOutHand.addEventListener("click", playOutCurrentHand);
 
   [el.potSize, el.callSize, el.outs].forEach((input) => {
     input.addEventListener("input", renderOdds);
@@ -335,6 +359,9 @@ function renderControls() {
   el.tableSizeButtons.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
       state.tableSize = Number(button.dataset.table);
+      state.forcedOpener = null;
+      state.context = null;
+      state.runout = null;
       normalizeState();
       rebuildContext();
       state.answered = false;
@@ -353,6 +380,9 @@ function renderControls() {
   el.positionButtons.querySelectorAll("button:not([disabled])").forEach((button) => {
     button.addEventListener("click", () => {
       state.position = button.dataset.position;
+      state.forcedOpener = null;
+      state.context = null;
+      state.runout = null;
       rebuildContext();
       state.answered = false;
       render();
@@ -365,6 +395,9 @@ function renderControls() {
   el.spotButtons.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
       state.spot = button.dataset.spot;
+      state.forcedOpener = null;
+      state.context = null;
+      state.runout = null;
       normalizeState();
       rebuildContext();
       state.answered = false;
@@ -387,6 +420,7 @@ function renderControls() {
   el.stackPresetButtons.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
       state.stackBb = Number(button.dataset.stack);
+      state.runout = null;
       rebuildContext();
       state.answered = false;
       render();
@@ -449,10 +483,12 @@ function renderTrainer() {
     el.resultBox.innerHTML = "<p>Choose an action, then compare it with the tournament recommendation.</p>";
     el.frequencyBars.innerHTML = renderBars(hiddenProfile(actions));
     el.explainBox.innerHTML = `<p>${spotHint(state.spot, context)}</p>`;
+    renderRunoutBox(context, rec);
     return;
   }
 
   renderRecommendation(rec);
+  renderRunoutBox(context, rec);
 }
 
 function trainerActionNote(spot, context, actions) {
@@ -480,6 +516,11 @@ function spotHint(spot, context) {
 
 function renderTableScene(context) {
   el.tableSeats.innerHTML = buildSeatMarkup(context);
+  el.potBadge.innerHTML = `
+    <span>Total Pot</span>
+    <strong>${formatBb(context.potBb || 0)}</strong>
+    <em>${context.toCallBb ? `To call ${formatBb(context.toCallBb)}` : "Unopened"}</em>
+  `;
   positionDealerChip();
   const hasBoard = Array.isArray(context.board) && context.board.length > 0;
   el.boardWrap.classList.toggle("is-hidden", !hasBoard);
@@ -517,6 +558,44 @@ function renderRecommendation(rec, chosen = null) {
   `;
   el.frequencyBars.innerHTML = renderBars(rec.profile);
   el.explainBox.innerHTML = `<p>${rec.note}</p>`;
+}
+
+function playOutCurrentHand() {
+  const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, state.current);
+  const startingBoard = Array.isArray(context.board) ? [...context.board] : drawRandomCards(3, state.current.cards);
+  const excluded = [...state.current.cards, ...startingBoard];
+  const remainingBoard = drawRandomCards(Math.max(0, 5 - startingBoard.length), excluded);
+  const fullBoard = [...startingBoard, ...remainingBoard];
+  const outcome = assessRunout(state.current.cards, fullBoard);
+
+  state.runout = {
+    flop: fullBoard.slice(0, 3),
+    turn: fullBoard[3],
+    river: fullBoard[4],
+    board: fullBoard,
+    outcome,
+  };
+  render();
+}
+
+function renderRunoutBox(context, rec) {
+  if (!state.runout) {
+    const cue = context.board ? "Run the turn and river from this flop." : "Run one possible flop, turn, and river after your preflop decision.";
+    el.runoutBox.innerHTML = `<p>${cue}</p>`;
+    return;
+  }
+
+  const turnText = state.runout.turn ? `${state.runout.turn.rank}${state.runout.turn.suit.symbol}` : "";
+  const riverText = state.runout.river ? `${state.runout.river.rank}${state.runout.river.suit.symbol}` : "";
+  el.runoutBox.innerHTML = `
+    <div class="runout-board">
+      <span>Flop ${boardText(state.runout.flop)}</span>
+      <span>Turn ${turnText}</span>
+      <span>River ${riverText}</span>
+    </div>
+    <strong>${state.runout.outcome.title}</strong>
+    <p>${state.runout.outcome.body} Current recommendation starts with ${rec.primary}${rec.secondary ? `, mixed with ${rec.secondary}` : ""}.</p>
+  `;
 }
 
 function renderBars(profile) {
@@ -629,21 +708,48 @@ function renderScore() {
   el.handsPlayed.textContent = state.played;
 }
 
+function pickRealisticSpotSetup(spot, tableSize) {
+  if (blindBattleSpots.has(spot) && Math.random() < 0.48) {
+    const battle = weightedChoice([
+      { value: { heroPosition: "BB", openerPosition: "BTN" }, weight: 55 },
+      { value: { heroPosition: "BB", openerPosition: "SB" }, weight: 32 },
+      { value: { heroPosition: "SB", openerPosition: "BTN" }, weight: 13 },
+    ]);
+    if (getCandidatePositions(spot, tableSize).includes(battle.heroPosition)) {
+      return battle;
+    }
+  }
+
+  return {
+    heroPosition: pickRealisticHeroPosition(spot, tableSize),
+    openerPosition: null,
+  };
+}
+
+function pickRealisticHeroPosition(spot, tableSize) {
+  const weights = realisticPositionWeights[tableSize]?.[spot] || {};
+  const candidates = getCandidatePositions(spot, tableSize);
+  return weightedChoice(
+    candidates.map((position) => ({
+      value: position,
+      weight: weights[position] || 1,
+    })),
+  );
+}
+
 function randomTournamentSpot({ fullRandom = true, preserveScore = false } = {}) {
   if (fullRandom) {
     state.stackBb = randomTournamentStack();
     state.spot = weightedChoice([
-      { value: "open", weight: 38 },
-      { value: "vsRaise", weight: 30 },
-      { value: "vs3bet", weight: 14 },
-      { value: "flopVsCbet", weight: 18 },
+      { value: "open", weight: 32 },
+      { value: "vsRaise", weight: 36 },
+      { value: "vs3bet", weight: 10 },
+      { value: "flopVsCbet", weight: 22 },
     ]);
-    state.position = weightedChoice(
-      getCandidatePositions(state.spot, state.tableSize).map((position, index, list) => ({
-        value: position,
-        weight: 10 + Math.max(index, list.length - index - 1) * 3,
-      })),
-    );
+    const setup = pickRealisticSpotSetup(state.spot, state.tableSize);
+    state.position = setup.heroPosition;
+    state.forcedOpener = setup.openerPosition || null;
+    state.context = null;
   }
 
   normalizeState();
@@ -659,6 +765,8 @@ function randomTournamentSpot({ fullRandom = true, preserveScore = false } = {})
   if (fullRandom || !state.context) {
     rebuildContext(state.current);
   }
+  state.forcedOpener = state.context?.openerPosition || state.forcedOpener;
+  state.runout = null;
   state.answered = false;
   if (!preserveScore) {
     renderScore();
@@ -670,7 +778,7 @@ function pickTrainingHand(position, spot, tableSize, stackBb, previous = "") {
   const pool = allHands.map((hand) => {
     const rec = recommend(hand.key, position, spot, tableSize, stackBb);
     const strength = handStrength(hand.key);
-    const weight = trainingWeight(rec, strength, hand.key, spot, stackBb);
+    const weight = trainingWeight(rec, strength, hand.key, spot, stackBb, position, tableSize);
     return { value: hand.key, weight };
   });
 
@@ -681,16 +789,21 @@ function pickTrainingHand(position, spot, tableSize, stackBb, previous = "") {
   return pick;
 }
 
-function trainingWeight(rec, strength, key, spot, stackBb) {
+function trainingWeight(rec, strength, key, spot, stackBb, position, tableSize) {
   const traits = inspectHand(key);
+  const earlySeat = positionLeverage(position, tableSize) <= (tableSize === 8 ? 3 : 1);
+  const offsuitTrash = !traits.isPair && !traits.suited && strength < 62 && !traits.isBroadway;
   let weight = 1;
 
-  if (rec.primary !== "Fold") weight += 9;
+  if (rec.primary !== "Fold") weight += 12;
   if (rec.secondary) weight += 5;
   if (strength >= 58 && strength <= 84) weight += 4;
   if (traits.isPair || traits.hasAce) weight += 1;
   if (spot !== "open" && stackBb <= 20 && rec.primary === "Jam") weight += 5;
   if (stackBb <= 12 && spot === "open" && rec.primary !== "Fold") weight += 3;
+  if (spot === "open" && earlySeat && offsuitTrash) weight = Math.max(1, Math.floor(weight * 0.08));
+  if (spot === "open" && ["CO", "BTN", "SB"].includes(position) && rec.primary !== "Fold") weight += 8;
+  if ((position === "BB" || state.context?.isBlindBattle) && spot !== "open" && rec.primary === "Call") weight += 10;
 
   return weight;
 }
@@ -707,7 +820,10 @@ function getSpotActions(spotId, stackBb) {
   }
 
   if (spotId === "vsRaise") {
-    if (stackBb <= 11) return ["Fold", "Jam"];
+    const blindDefense = state.position === "BB" || state.context?.isBlindBattle || state.forcedOpener === "SB" || state.forcedOpener === "BTN";
+    if (stackBb <= 8 && !blindDefense) return ["Fold", "Jam"];
+    if (stackBb <= 11 && !blindDefense) return ["Fold", "Jam"];
+    if (stackBb <= 11 && blindDefense) return ["Fold", "Call", "Jam"];
     if (stackBb <= 20) return ["Fold", "Call", "Jam"];
     return ["Fold", "Call", "3-bet"];
   }
@@ -734,9 +850,11 @@ function recommend(key, position, spot, tableSize, stackBb, context = null) {
 
   if (spot === "open") {
     const cutoff = openThreshold(position, tableSize) + shallowOpenPenalty(stackBb, position, tableSize);
-    const playable = openSet.has(key) || strength + positionLift * 2 >= cutoff;
+    const lateStealSeat = ["CO", "BTN", "SB"].includes(position);
+    const dominatedOffsuit = !traits.isPair && !traits.suited && !traits.isBroadway && !(traits.hasAce && traits.lowValue >= 10);
+    const playable = openSet.has(key) || (lateStealSeat && !dominatedOffsuit && strength + positionLift * 2 >= cutoff);
     if (!playable) {
-      return foldRec(actions, "This combo sits below the tournament opening line for this seat and stack. Passing now protects future spots.");
+      return foldRec(actions, "This combo sits below the realistic tournament opening line for this seat. Early and middle positions should not drift into weak offsuit opens.");
     }
 
     const marginal = !openSet.has(key) || strength < cutoff + 4;
@@ -778,11 +896,13 @@ function recommend(key, position, spot, tableSize, stackBb, context = null) {
         (callRaiseSet.has(key) && stackBb <= 15 && (traits.isPair || traits.hasAce && traits.lowValue >= 10)) ||
         (stackBb <= 11 && strength >= 72));
 
+    const blindDefense = position === "BB" || context?.isBlindBattle;
     const callCandidate =
       actions.includes("Call") &&
       (callRaiseSet.has(key) ||
+        (blindDefense && stackBb >= 9 && isBlindDefenseHand(key, context?.openerPosition || "", tableSize)) ||
         (stackBb >= 18 && traits.isSuited && traits.highValue >= 12) ||
-        (position === "BB" && stackBb >= 14 && strength >= 55));
+        (position === "BB" && stackBb >= 12 && strength >= 52));
 
     if (jamCandidate && !actions.includes("Call")) {
       return actionRec(actions, "Jam", "", 100, "Shallow tournament stacks convert the aggressive continue into a re-jam. That keeps your line simple and maximizes fold equity.");
@@ -964,6 +1084,7 @@ function analyzeFlopHand(heroCards, board) {
     topPair ||
     secondPair ||
     underPair ||
+    monster ||
     flushDraw ||
     openEnded ||
     comboDraw ||
@@ -991,6 +1112,35 @@ function analyzeFlopHand(heroCards, board) {
   };
 }
 
+function assessRunout(heroCards, board) {
+  const made = analyzeFlopHand(heroCards, board);
+  if (made.monster) {
+    return {
+      title: "Strong runout",
+      body: "Your hand improves into a very strong made hand on this board. In real review, this is where value betting and not slowplaying too much becomes the main idea.",
+    };
+  }
+
+  if (made.overpair || made.topPairTopKicker || made.topPair) {
+    return {
+      title: "Showdown path",
+      body: "You arrive with a pair that can often continue to showdown, but the exact sizing matters. This is a common one-pair tournament spot rather than an automatic stack-off.",
+    };
+  }
+
+  if (made.flushDraw || made.openEnded || made.gutshot || made.lightContinue) {
+    return {
+      title: "Equity but not made",
+      body: "The runout leaves you with draw or overcard equity rather than a clean made hand. This is the kind of branch where pot odds and future fold equity matter more than the hand name.",
+    };
+  }
+
+  return {
+    title: "Give-up branch",
+    body: "This runout does not help enough. In practice this is where the hand often checks down, folds to pressure, or becomes a low-frequency bluff only with good blockers.",
+  };
+}
+
 function detectStraightProfile(values) {
   const set = new Set(values);
   if (set.has(14)) set.add(1);
@@ -1015,6 +1165,25 @@ function detectStraightProfile(values) {
   }
 
   return { madeStraight, openEnded, gutshot };
+}
+
+function isBlindDefenseHand(key, openerPosition, tableSize) {
+  const traits = inspectHand(key);
+  const lateOpen = ["CO", "BTN", "SB"].includes(openerPosition) || positionLeverage(openerPosition, tableSize) >= tableConfigs[tableSize].positions.length - 3;
+
+  if (!lateOpen) {
+    return traits.isPair || traits.hasAce || traits.isBroadway || (traits.isSuited && traits.highValue >= 11);
+  }
+
+  if (traits.isPair || traits.hasAce || traits.isBroadway) return true;
+  if (traits.isSuited && traits.highValue >= 9) return true;
+  if (traits.isConnector && traits.highValue >= 7) return true;
+  if (traits.suited && traits.gap <= 2 && traits.highValue >= 8) return true;
+  return openerPosition === "SB" && handStrength(key) >= 48;
+}
+
+function isBlindBattle(heroPosition, openerPosition) {
+  return (heroPosition === "BB" && ["SB", "BTN"].includes(openerPosition)) || (heroPosition === "SB" && openerPosition === "BTN");
 }
 
 function buildSeatMarkup(context) {
@@ -1126,12 +1295,21 @@ function cardsFromKeyForBoard(key, board) {
     }
   }
 
+  if (!parsed.suited) {
+    const firstOptions = suits.map((suit) => ({ rank: parsed.high, suit })).filter((card) => !blocked.has(cardId(card)));
+    const secondOptions = suits.map((suit) => ({ rank: parsed.low, suit })).filter((card) => !blocked.has(cardId(card)));
+    for (const firstOption of firstOptions) {
+      const secondOption = secondOptions.find((card) => card.suit.name !== firstOption.suit.name);
+      if (secondOption) return [firstOption, secondOption];
+    }
+  }
+
   const first = suits
     .map((suit) => ({ rank: parsed.high, suit }))
     .find((card) => !blocked.has(cardId(card)));
   const second = suits
     .map((suit) => ({ rank: parsed.low, suit }))
-    .find((card) => !blocked.has(cardId(card)) && suitId(card.suit) !== suitId(first?.suit));
+    .find((card) => !blocked.has(cardId(card)) && (parsed.suited || suitId(card.suit) !== suitId(first?.suit)));
 
   if (first && second) return [first, second];
   return makeHand(parsed.high, parsed.low, parsed.suited).cards;
@@ -1222,7 +1400,7 @@ function normalizeState() {
 }
 
 function rebuildContext(heroHand = state.current) {
-  state.context = buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, heroHand);
+  state.context = buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, heroHand, state.forcedOpener);
 }
 
 function getActivePositions(tableSize) {
@@ -1233,7 +1411,7 @@ function getCandidatePositions(spot, tableSize) {
   return tableConfigs[tableSize].candidates[spot];
 }
 
-function buildSpotContext(heroPosition, spot, tableSize, stackBb, heroHand = state.current) {
+function buildSpotContext(heroPosition, spot, tableSize, stackBb, heroHand = state.current, forcedOpener = null) {
   const positions = getActivePositions(tableSize);
   const heroIndex = positions.indexOf(heroPosition);
   const basePot = 2.5;
@@ -1260,7 +1438,11 @@ function buildSpotContext(heroPosition, spot, tableSize, stackBb, heroHand = sta
 
   if (spot === "vsRaise") {
     const openerCandidates = positions.slice(0, heroIndex).filter((position) => position !== "BB");
-    const openerPosition = openerCandidates.length ? openerCandidates[randomInt(0, openerCandidates.length - 1)] : positions[0];
+    const openerPosition = forcedOpener && openerCandidates.includes(forcedOpener)
+      ? forcedOpener
+      : openerCandidates.length
+        ? openerCandidates[randomInt(0, openerCandidates.length - 1)]
+        : positions[0];
     const openerPosted = blindPosted(openerPosition);
     const heroPosted = blindPosted(heroPosition);
     const potBb = roundBb(basePot + (openSize - openerPosted));
@@ -1272,6 +1454,7 @@ function buildSpotContext(heroPosition, spot, tableSize, stackBb, heroHand = sta
       openSize,
       potBb,
       toCallBb,
+      isBlindBattle: isBlindBattle(heroPosition, openerPosition),
       summary: `${openerPosition} opens ${formatBb(openSize)} · Pot ${formatBb(potBb)} · Call ${formatBb(toCallBb)}`,
       lines: [
         { label: "Open", value: `${openerPosition} ${formatBb(openSize)}` },
@@ -1283,7 +1466,11 @@ function buildSpotContext(heroPosition, spot, tableSize, stackBb, heroHand = sta
 
   if (spot === "flopVsCbet") {
     const openerCandidates = positions.slice(0, heroIndex).filter((position) => position !== "BB");
-    const openerPosition = openerCandidates.length ? openerCandidates[randomInt(0, openerCandidates.length - 1)] : positions[0];
+    const openerPosition = forcedOpener && openerCandidates.includes(forcedOpener)
+      ? forcedOpener
+      : openerCandidates.length
+        ? openerCandidates[randomInt(0, openerCandidates.length - 1)]
+        : positions[0];
     const openerPosted = blindPosted(openerPosition);
     const heroPosted = blindPosted(heroPosition);
     const preflopPotBb = roundBb(basePot + (openSize - openerPosted) + (openSize - heroPosted));
@@ -1309,6 +1496,7 @@ function buildSpotContext(heroPosition, spot, tableSize, stackBb, heroHand = sta
       potBeforeBet: preflopPotBb,
       potBb,
       toCallBb: betSize,
+      isBlindBattle: isBlindBattle(heroPosition, openerPosition),
       summary: `${openerPosition} opens ${formatBb(openSize)} 路 Hero calls 路 Flop ${boardText(board)} 路 Bet ${formatBb(betSize)}`,
       lines: [
         { label: "Preflop", value: `${openerPosition} open / Hero call` },

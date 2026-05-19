@@ -349,6 +349,38 @@ select {
   z-index: 2;
 }
 
+.pot-badge {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  min-width: 116px;
+  justify-items: center;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(7, 40, 29, 0.74);
+  padding: 9px 12px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.pot-badge span,
+.pot-badge em {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pot-badge strong {
+  color: #fff;
+  font-size: 1.2rem;
+}
+
 .table-seats {
   position: absolute;
   inset: 0;
@@ -425,7 +457,7 @@ select {
 
 .scenario strong {
   color: #fff;
-  font-size: clamp(2.3rem, 6vw, 4.2rem);
+  font-size: clamp(1.65rem, 4vw, 2.8rem);
   line-height: 0.9;
 }
 
@@ -438,7 +470,7 @@ select {
 
 .board-wrap {
   position: absolute;
-  top: 172px;
+  top: 206px;
   left: 50%;
   display: grid;
   gap: 8px;
@@ -473,9 +505,9 @@ select {
 
 .hole-cards {
   left: 50%;
-  bottom: 78px;
+  bottom: 88px;
   transform: translateX(-50%);
-  gap: 14px;
+  gap: 10px;
 }
 
 .mini-cards {
@@ -498,27 +530,27 @@ select {
 .playing-card {
   position: relative;
   display: grid;
-  width: clamp(116px, 17vw, 170px);
+  width: clamp(76px, 9vw, 106px);
   aspect-ratio: 0.7;
   grid-template-rows: auto 1fr auto;
   border-radius: 8px;
   background: #fff;
   color: #171a18;
-  padding: 14px;
+  padding: 9px;
   box-shadow: 0 24px 42px rgba(0, 0, 0, 0.22);
 }
 
 .hole-cards .playing-card:nth-child(2) {
-  transform: translateY(12px) rotate(5deg);
+  transform: translateY(5px) rotate(3deg);
 }
 
 .hole-cards .playing-card:first-child {
-  transform: translateY(-6px) rotate(-4deg);
+  transform: translateY(-2px) rotate(-3deg);
 }
 
 .board-card {
-  width: 78px;
-  padding: 8px;
+  width: 64px;
+  padding: 7px;
   box-shadow: 0 14px 24px rgba(0, 0, 0, 0.18);
 }
 
@@ -528,7 +560,7 @@ select {
 }
 
 .board-card .card-center {
-  font-size: 2.8rem;
+  font-size: 2.2rem;
 }
 
 .playing-card.red {
@@ -546,7 +578,7 @@ select {
 .card-center {
   display: grid;
   place-items: center;
-  font-size: clamp(3.6rem, 8vw, 6.6rem);
+  font-size: clamp(2.3rem, 5vw, 4rem);
 }
 
 .card-bottom {
@@ -658,6 +690,7 @@ select {
 
 .result-box,
 .explain-box,
+.runout-box,
 .selected-hand {
   border-radius: 8px;
   background: #f2f7f4;
@@ -665,16 +698,43 @@ select {
 }
 
 .result-box p,
-.explain-box p {
+.explain-box p,
+.runout-box p {
   margin: 0;
   color: var(--muted);
   line-height: 1.55;
 }
 
-.result-box strong {
+.result-box strong,
+.runout-box strong {
   display: block;
   margin-bottom: 5px;
   font-size: 1.4rem;
+}
+
+.runout-actions {
+  margin-top: 14px;
+}
+
+.runout-box {
+  margin-top: 12px;
+}
+
+.runout-board {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.runout-board span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  padding: 6px 10px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 900;
 }
 
 .frequency-bars {
@@ -1033,7 +1093,7 @@ output {
   }
 
   .board-wrap {
-    top: 184px;
+    top: 196px;
   }
 }
 
@@ -1072,7 +1132,7 @@ output {
   }
 
   .scenario strong {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
   .seat {
@@ -1087,17 +1147,17 @@ output {
   }
 
   .board-wrap {
-    top: 188px;
+    top: 202px;
   }
 
   .board-card {
-    width: 58px;
+    width: 50px;
     padding: 6px;
   }
 
   .hole-cards {
     gap: 8px;
-    bottom: 58px;
+    bottom: 66px;
   }
 
   .slider-row {
