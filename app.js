@@ -9,22 +9,22 @@ const suits = [
 const rankValue = Object.fromEntries(ranks.map((rank, index) => [rank, 14 - index]));
 const seatLayouts = {
   6: [
-    { x: 50, y: 83, align: "center" },
-    { x: 76, y: 69, align: "right" },
-    { x: 81, y: 36, align: "right" },
-    { x: 50, y: 20, align: "center" },
-    { x: 19, y: 36, align: "left" },
-    { x: 24, y: 69, align: "left" },
+    { x: 50, y: 88, align: "center" },
+    { x: 78, y: 68, align: "right" },
+    { x: 73, y: 27, align: "right" },
+    { x: 50, y: 16, align: "center" },
+    { x: 27, y: 27, align: "left" },
+    { x: 22, y: 68, align: "left" },
   ],
   8: [
-    { x: 50, y: 83, align: "center" },
-    { x: 70, y: 77, align: "right" },
-    { x: 82, y: 58, align: "right" },
-    { x: 79, y: 31, align: "right" },
-    { x: 50, y: 18, align: "center" },
-    { x: 21, y: 31, align: "left" },
-    { x: 18, y: 58, align: "left" },
-    { x: 30, y: 77, align: "left" },
+    { x: 50, y: 88, align: "center" },
+    { x: 78, y: 68, align: "right" },
+    { x: 84, y: 47, align: "right" },
+    { x: 68, y: 18, align: "center" },
+    { x: 50, y: 13, align: "center" },
+    { x: 32, y: 18, align: "center" },
+    { x: 16, y: 47, align: "left" },
+    { x: 22, y: 68, align: "left" },
   ],
 };
 

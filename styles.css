@@ -346,10 +346,10 @@ select {
 .felt {
   position: relative;
   display: grid;
-  min-height: 560px;
+  min-height: 540px;
   place-items: center;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 12px;
   background:
     radial-gradient(ellipse at center, rgba(255, 255, 255, 0.12), transparent 22rem),
     repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.035) 0 2px, transparent 2px 12px),
@@ -382,9 +382,24 @@ select {
 .felt::before {
   content: "";
   position: absolute;
-  inset: 52px 80px;
+  inset: 58px 38px 70px;
   border: 2px solid rgba(255, 255, 255, 0.24);
-  border-radius: 50%;
+  border-radius: 50% / 43%;
+  z-index: 0;
+}
+
+.felt::after {
+  content: "";
+  position: absolute;
+  inset: 74px 62px 88px;
+  border-radius: 50% / 42%;
+  background:
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.1), transparent 54%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(0, 0, 0, 0.04));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 28px 70px rgba(255, 255, 255, 0.035);
+  z-index: 0;
 }
 
 .dealer-chip {
@@ -448,8 +463,9 @@ select {
   top: var(--seat-y);
   display: grid;
   gap: 4px;
-  min-width: 94px;
-  padding: 8px 10px;
+  min-width: 88px;
+  max-width: 132px;
+  padding: 7px 9px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
   background: rgba(9, 41, 30, 0.56);
@@ -469,6 +485,9 @@ select {
 .seat.hero {
   background: rgba(255, 255, 255, 0.16);
   border-color: rgba(255, 255, 255, 0.36);
+  min-width: 138px;
+  justify-items: center;
+  text-align: center;
 }
 
 .seat.short-stack {
@@ -508,27 +527,9 @@ select {
 
 .seat-hole-cards {
   display: flex;
-  gap: 5px;
+  justify-content: center;
+  gap: 4px;
   margin-top: 2px;
-}
-
-.seat-card {
-  width: 34px;
-  border-radius: 5px;
-  padding: 4px;
-  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.18);
-}
-
-.seat-card .card-corner {
-  font-size: 0.62rem;
-}
-
-.seat-card .card-center {
-  font-size: 1.1rem;
-}
-
-.seat-card .card-bottom {
-  display: none;
 }
 
 .scenario {
@@ -558,7 +559,7 @@ select {
 
 .board-wrap {
   position: absolute;
-  top: 206px;
+  top: 178px;
   left: 50%;
   display: grid;
   gap: 8px;
@@ -596,6 +597,7 @@ select {
   bottom: 88px;
   transform: translateX(-50%);
   gap: 10px;
+  display: none;
 }
 
 .mini-cards {
@@ -626,6 +628,31 @@ select {
   color: #171a18;
   padding: 9px;
   box-shadow: 0 24px 42px rgba(0, 0, 0, 0.22);
+}
+
+.seat-hole-cards .playing-card.seat-card {
+  width: 30px;
+  min-width: 30px;
+  border-radius: 5px;
+  padding: 3px;
+  box-shadow: 0 7px 11px rgba(0, 0, 0, 0.18);
+}
+
+.seat-hole-cards .playing-card.seat-card:first-child,
+.seat-hole-cards .playing-card.seat-card:nth-child(2) {
+  transform: none;
+}
+
+.seat-hole-cards .seat-card .card-corner {
+  font-size: 0.56rem;
+}
+
+.seat-hole-cards .seat-card .card-center {
+  font-size: 0.92rem;
+}
+
+.seat-hole-cards .seat-card .card-bottom {
+  display: none;
 }
 
 .hole-cards .playing-card:nth-child(2) {
@@ -675,14 +702,7 @@ select {
 }
 
 .table-line {
-  position: absolute;
-  bottom: 40px;
-  left: 50%;
-  width: min(78%, 640px);
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  transform: translateX(-50%);
+  display: none;
 }
 
 .context-strip {
@@ -1212,7 +1232,11 @@ output {
   }
 
   .felt::before {
-    inset: 76px 20px 96px;
+    inset: 78px 16px 82px;
+  }
+
+  .felt::after {
+    inset: 94px 30px 100px;
   }
 
   .scenario {
@@ -1224,8 +1248,13 @@ output {
   }
 
   .seat {
-    min-width: 70px;
-    padding: 6px 7px;
+    min-width: 64px;
+    max-width: 98px;
+    padding: 5px 6px;
+  }
+
+  .seat.hero {
+    min-width: 104px;
   }
 
   .seat-label,
@@ -1235,7 +1264,7 @@ output {
   }
 
   .board-wrap {
-    top: 202px;
+    top: 186px;
   }
 
   .board-card {
@@ -1246,6 +1275,11 @@ output {
   .hole-cards {
     gap: 8px;
     bottom: 66px;
+  }
+
+  .seat-hole-cards .playing-card.seat-card {
+    width: 25px;
+    min-width: 25px;
   }
 
   .slider-row {
