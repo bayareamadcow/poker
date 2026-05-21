@@ -552,12 +552,12 @@ function renderTrainer() {
   const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, state.current);
   const rec = recommend(state.current.key, state.position, state.spot, state.tableSize, state.stackBb, context);
   const actions = getSpotActions(state.spot, state.stackBb);
-  const lateFlag = isLatePosition(state.position, state.tableSize) ? "Late-position pressure" : "Earlier seat discipline";
+  const lateFlag = isLatePosition(state.position, state.tableSize) ? "Late pressure" : "Early discipline";
   const actionNote = trainerActionNote(state.spot, context, actions);
 
   el.scenarioText.textContent = `${gameModes[state.gameMode].label} · ${tableConfigs[state.tableSize].label} · ${state.position} · ${spot.label}`;
   el.scenarioMeta.innerHTML = `
-    <span class="pill ghost">${stackBandLabel(state.stackBb)}</span>
+    <span class="pill ghost">${compactStackBandLabel(state.stackBb)}</span>
     <span class="pill ghost">${lateFlag}</span>
     <span class="pill ghost">${actionNote}</span>
   `;
@@ -585,10 +585,10 @@ function renderTrainer() {
 }
 
 function trainerActionNote(spot, context, actions) {
-  if (spot === "open") return "No call in unopened pot";
-  if (!actions.includes("Call")) return `${state.stackBb}BB is jam-or-fold here`;
-  if (spot === "flopVsCbet") return `Facing ${formatBb(context.betSize)} c-bet`;
-  return "Call unlocks once you face action";
+  if (spot === "open") return "No call unopened";
+  if (!actions.includes("Call")) return "Jam or fold";
+  if (spot === "flopVsCbet") return `${formatBb(context.betSize)} c-bet`;
+  return "Call available";
 }
 
 function spotHint(spot, context) {
@@ -1649,8 +1649,10 @@ function positionDealerChip() {
   const buttonIndex = positions.indexOf("BTN");
   const relativeIndex = (buttonIndex - heroIndex + positions.length) % positions.length;
   const seat = seatLayouts[state.tableSize][relativeIndex];
-  el.dealerChip.style.left = `${seat.x}%`;
-  el.dealerChip.style.top = `${seat.y}%`;
+  const dealerX = seat.x + (50 - seat.x) * 0.72;
+  const dealerY = seat.y + (50 - seat.y) * 0.72;
+  el.dealerChip.style.left = `${dealerX}%`;
+  el.dealerChip.style.top = `${dealerY}%`;
 }
 
 function describeSeat(position, context) {
@@ -2078,6 +2080,18 @@ function stackBandLabel(stackBb) {
   if (stackBb <= 20) return "Short stack";
   if (stackBb <= 32) return "Average MTT stack";
   return "Chip-leader stack";
+}
+
+function compactStackBandLabel(stackBb) {
+  if (state.gameMode === "cash") {
+    if (stackBb <= 70) return "Short cash";
+    if (stackBb <= 130) return "100BB cash";
+    return "Deep cash";
+  }
+  if (stackBb <= 10) return "Push/fold";
+  if (stackBb <= 20) return "Short stack";
+  if (stackBb <= 32) return "Average stack";
+  return "Chip lead";
 }
 
 function shallowOpenPenalty(stackBb, position, tableSize) {

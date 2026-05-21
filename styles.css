@@ -416,16 +416,17 @@ select {
   top: 50%;
   left: 50%;
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 24px;
+  height: 24px;
   place-items: center;
   border-radius: 999px;
   background: var(--sand);
   color: #17231d;
+  font-size: 0.66rem;
   font-weight: 900;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
   transform: translate(-50%, -50%);
-  z-index: 2;
+  z-index: 4;
 }
 
 .pot-badge {
@@ -730,21 +731,22 @@ select {
 
 .scenario {
   position: absolute;
-  top: 22%;
-  left: 50%;
+  top: 24%;
+  left: 18px;
   display: grid;
-  gap: 4px;
-  justify-items: center;
-  max-width: 72%;
-  border-radius: 999px;
-  background: rgba(8, 23, 19, 0.42);
-  padding: 4px 10px;
+  gap: 6px;
+  justify-items: start;
+  width: min(142px, calc(100% - 36px));
+  border-radius: 8px;
+  background: rgba(8, 23, 19, 0.34);
+  padding: 6px;
   color: rgba(255, 255, 255, 0.82);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  text-align: center;
-  transform: translateX(-50%);
+  text-align: left;
+  transform: none;
   z-index: 3;
+  pointer-events: none;
 }
 
 .scenario strong {
@@ -752,10 +754,21 @@ select {
 }
 
 .scenario-meta {
-  display: none;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 6px;
+  display: grid;
+  width: 100%;
+  gap: 5px;
+  margin-top: 0;
+}
+
+.scenario-meta .pill {
+  min-height: 0;
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 6px;
+  padding: 5px 7px;
+  font-size: 0.58rem;
+  line-height: 1.15;
+  white-space: normal;
 }
 
 .board-wrap {
@@ -1475,12 +1488,19 @@ output {
   }
 
   .scenario {
-    top: 21%;
-    left: 50%;
+    top: 23%;
+    left: 12px;
+    width: min(124px, calc(100% - 24px));
+    padding: 6px;
   }
 
   .scenario strong {
-    font-size: 1.8rem;
+    display: none;
+  }
+
+  .scenario-meta .pill {
+    padding: 4px 6px;
+    font-size: 0.55rem;
   }
 
   .seat {
