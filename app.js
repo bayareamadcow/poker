@@ -9,22 +9,22 @@ const suits = [
 const rankValue = Object.fromEntries(ranks.map((rank, index) => [rank, 14 - index]));
 const seatLayouts = {
   6: [
-    { x: 50, y: 88, align: "center" },
-    { x: 78, y: 68, align: "right" },
-    { x: 73, y: 27, align: "right" },
-    { x: 50, y: 16, align: "center" },
-    { x: 27, y: 27, align: "left" },
-    { x: 22, y: 68, align: "left" },
+    { x: 50, y: 87, align: "center" },
+    { x: 82, y: 67, align: "right" },
+    { x: 72, y: 13, align: "center" },
+    { x: 50, y: 8, align: "center" },
+    { x: 28, y: 13, align: "center" },
+    { x: 18, y: 67, align: "left" },
   ],
   8: [
-    { x: 50, y: 88, align: "center" },
-    { x: 78, y: 68, align: "right" },
-    { x: 84, y: 47, align: "right" },
-    { x: 68, y: 18, align: "center" },
-    { x: 50, y: 13, align: "center" },
-    { x: 32, y: 18, align: "center" },
-    { x: 16, y: 47, align: "left" },
-    { x: 22, y: 68, align: "left" },
+    { x: 50, y: 87, align: "center" },
+    { x: 78, y: 79, align: "right" },
+    { x: 88, y: 54, align: "right" },
+    { x: 76, y: 12, align: "center" },
+    { x: 50, y: 7, align: "center" },
+    { x: 24, y: 12, align: "center" },
+    { x: 12, y: 54, align: "left" },
+    { x: 22, y: 79, align: "left" },
   ],
 };
 
@@ -85,6 +85,17 @@ const tableThemes = [
   { id: "midnight", label: "Midnight", accent: "#31507b" },
   { id: "royal", label: "Royal", accent: "#6b2f4a" },
   { id: "sand", label: "Sand", accent: "#9b7b45" },
+];
+
+const avatarStyles = [
+  { hood: "#f5eee2", face: "#e7b87f", blush: "#d97a6a", accent: "#1fb36b", eye: "#111414", variant: "fuzzy" },
+  { hood: "#22252a", face: "#d7d0c5", blush: "#9d615c", accent: "#7dc8ff", eye: "#0a0b0d", variant: "shadow" },
+  { hood: "#b95c49", face: "#f2d0a7", blush: "#d27877", accent: "#f0c64d", eye: "#15110f", variant: "sunny" },
+  { hood: "#6f8fd6", face: "#ead8c2", blush: "#c96f90", accent: "#f4f4f4", eye: "#10151f", variant: "blue" },
+  { hood: "#7f5aa6", face: "#e0c0a3", blush: "#d88aac", accent: "#9ee2bd", eye: "#17111d", variant: "violet" },
+  { hood: "#d9b45d", face: "#f0d8b8", blush: "#c97958", accent: "#3a3a32", eye: "#10100c", variant: "gold" },
+  { hood: "#40765b", face: "#dcc1a5", blush: "#b96a65", accent: "#b8e0c8", eye: "#101512", variant: "moss" },
+  { hood: "#d8d9df", face: "#caa17e", blush: "#bb6e70", accent: "#151515", eye: "#161616", variant: "pale" },
 ];
 
 const realisticPositionWeights = {
@@ -237,8 +248,10 @@ const state = {
   spot: "open",
   context: null,
   seatStacks: {},
+  seatAvatars: {},
   current: makeHand("A", "J", true),
   selectedKey: "AJs",
+  chosenAction: null,
   answered: false,
   correct: 0,
   played: 0,
@@ -332,6 +345,7 @@ function bindEvents() {
     normalizeState();
     state.runout = null;
     rebuildContext();
+    state.chosenAction = null;
     state.answered = false;
     render();
   });
@@ -343,6 +357,7 @@ function bindEvents() {
     state.current = makeHand(first, second, suited);
     state.selectedKey = state.current.key;
     rebuildContext(state.current);
+    state.chosenAction = null;
     state.answered = false;
     render();
   });
@@ -396,6 +411,7 @@ function renderControls() {
       state.runout = null;
       normalizeState();
       rebuildContext();
+      state.chosenAction = null;
       state.answered = false;
       render();
     });
@@ -418,6 +434,7 @@ function renderControls() {
       state.context = null;
       state.runout = null;
       rebuildContext();
+      state.chosenAction = null;
       state.answered = false;
       render();
     });
@@ -454,6 +471,7 @@ function renderControls() {
       state.context = null;
       state.runout = null;
       rebuildContext();
+      state.chosenAction = null;
       state.answered = false;
       render();
     });
@@ -470,6 +488,7 @@ function renderControls() {
       state.runout = null;
       normalizeState();
       rebuildContext();
+      state.chosenAction = null;
       state.answered = false;
       render();
     });
@@ -495,6 +514,7 @@ function renderControls() {
       state.stackBb = Number(button.dataset.stack);
       state.runout = null;
       rebuildContext();
+      state.chosenAction = null;
       state.answered = false;
       render();
     });
@@ -560,7 +580,7 @@ function renderTrainer() {
     return;
   }
 
-  renderRecommendation(rec);
+  renderRecommendation(rec, state.chosenAction);
   renderRunoutBox(context, rec);
 }
 
@@ -590,13 +610,20 @@ function spotHint(spot, context) {
 function renderTableScene(context) {
   el.felt.dataset.theme = state.tableTheme;
   el.tableSeats.innerHTML = buildSeatMarkup(context);
+  const displayBoard = state.runout?.board || context.board || [];
+  const displayPot = state.runout?.showdown?.potBb || context.potBb || 0;
+  const potNote = state.runout?.showdown
+    ? state.runout.showdown.resultText
+    : context.toCallBb
+      ? `To call ${formatBb(context.toCallBb)}`
+      : "Unopened";
   el.potBadge.innerHTML = `
     <span>Total Pot</span>
-    <strong>${formatBb(context.potBb || 0)}</strong>
-    <em>${context.toCallBb ? `To call ${formatBb(context.toCallBb)}` : "Unopened"}</em>
+    <strong>${formatBb(displayPot)}</strong>
+    <em>${potNote}</em>
   `;
   positionDealerChip();
-  const hasBoard = Array.isArray(context.board) && context.board.length > 0;
+  const hasBoard = Array.isArray(displayBoard) && displayBoard.length > 0;
   el.boardWrap.classList.toggle("is-hidden", !hasBoard);
   if (!hasBoard) {
     el.boardLabel.textContent = "";
@@ -604,16 +631,21 @@ function renderTableScene(context) {
     return;
   }
 
-  el.boardLabel.textContent = context.boardLabel || "Flop";
-  el.boardCards.innerHTML = context.board.map((card) => renderCard(card, "board-card")).join("");
+  el.boardLabel.textContent = displayBoard.length === 5 ? "Board" : context.boardLabel || "Flop";
+  el.boardCards.innerHTML = displayBoard.map((card) => renderCard(card, "board-card")).join("");
 }
 
 function chooseAction(action, rec) {
   if (state.answered) {
+    state.chosenAction = action;
+    state.runout = null;
     renderRecommendation(rec, action);
+    renderRunoutBox(state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, state.current), rec);
     return;
   }
   const isCorrect = action === rec.primary || action === rec.secondary;
+  state.chosenAction = action;
+  state.runout = null;
   state.played += 1;
   state.correct += isCorrect ? 1 : 0;
   state.streak = isCorrect ? state.streak + 1 : 0;
@@ -636,11 +668,18 @@ function renderRecommendation(rec, chosen = null) {
 
 function playOutCurrentHand() {
   const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, state.current);
+  const rec = recommend(state.current.key, state.position, state.spot, state.tableSize, state.stackBb, context);
+  const chosenAction = state.chosenAction || rec.primary;
   const startingBoard = Array.isArray(context.board) ? [...context.board] : drawRandomCards(3, state.current.cards);
-  const excluded = [...state.current.cards, ...startingBoard];
+  const showdownVillain = shouldOpenShowdown(chosenAction, rec) ? pickShowdownVillain(context) : null;
+  const villainCards = showdownVillain ? drawVillainCards(showdownVillain, context, [...state.current.cards, ...startingBoard]) : [];
+  const excluded = [...state.current.cards, ...villainCards, ...startingBoard];
   const remainingBoard = drawRandomCards(Math.max(0, 5 - startingBoard.length), excluded);
   const fullBoard = [...startingBoard, ...remainingBoard];
   const outcome = assessRunout(state.current.cards, fullBoard);
+  const showdown = showdownVillain
+    ? buildShowdownResult(context, showdownVillain, villainCards, fullBoard)
+    : null;
 
   state.runout = {
     flop: fullBoard.slice(0, 3),
@@ -648,6 +687,7 @@ function playOutCurrentHand() {
     river: fullBoard[4],
     board: fullBoard,
     outcome,
+    showdown,
   };
   render();
 }
@@ -668,8 +708,211 @@ function renderRunoutBox(context, rec) {
       <span>River ${riverText}</span>
     </div>
     <strong>${state.runout.outcome.title}</strong>
+    ${state.runout.showdown ? renderShowdownSummary(state.runout.showdown) : ""}
     <p>${state.runout.outcome.body} Current recommendation starts with ${rec.primary}${rec.secondary ? `, mixed with ${rec.secondary}` : ""}.</p>
   `;
+}
+
+function shouldOpenShowdown(action, rec) {
+  if (action === "Fold") return false;
+  return action === "Jam" || (!state.chosenAction && rec.primary === "Jam");
+}
+
+function pickShowdownVillain(context) {
+  if (context.threeBettorPosition) return context.threeBettorPosition;
+  if (context.openerPosition) return context.openerPosition;
+
+  const positions = getActivePositions(state.tableSize);
+  const heroIndex = positions.indexOf(state.position);
+  const candidates = positions.filter((position, index) => {
+    if (position === state.position) return false;
+    return blindPosted(position) > 0 || index > heroIndex;
+  });
+  const fallback = positions.filter((position) => position !== state.position);
+  const pool = (candidates.length ? candidates : fallback).map((position) => ({
+    value: position,
+    weight: blindPosted(position) > 0 ? 5 : Math.max(1, positionLeverage(position, state.tableSize) - heroIndex + 1),
+  }));
+
+  return weightedChoice(pool);
+}
+
+function drawVillainCards(position, context, excludedCards) {
+  const key = pickVillainHandKey(position, context);
+  return cardsFromKeyExcluding(key, excludedCards) || drawRandomCards(2, excludedCards);
+}
+
+function pickVillainHandKey(position, context) {
+  const byTable = ranges[state.tableSize];
+  let source = byTable.open[position] || new Set();
+  if (context.spot === "open") source = byTable.callRaise[position] || source;
+  if (context.spot === "vs3bet") source = byTable.threeBet[position] || source;
+  if (context.spot === "flopVsCbet") source = byTable.open[position] || source;
+
+  const pool = allHands
+    .map((hand) => {
+      const strength = handStrength(hand.key);
+      const inRange = source.has(hand.key);
+      const premiumFallback = strength >= 78;
+      return {
+        value: hand.key,
+        weight: inRange ? 30 + Math.round(strength / 6) : premiumFallback ? Math.round((strength - 70) / 3) : 0,
+      };
+    })
+    .filter((entry) => entry.weight > 0);
+
+  return weightedChoice(pool.length ? pool : allHands.map((hand) => ({ value: hand.key, weight: Math.max(1, Math.round(handStrength(hand.key) / 20)) })));
+}
+
+function buildShowdownResult(context, villainPosition, villainCards, board) {
+  const heroScore = scoreSevenCards([...state.current.cards, ...board]);
+  const villainScore = scoreSevenCards([...villainCards, ...board]);
+  const compare = compareScores(heroScore, villainScore);
+  const villainStack = getSeatStack(villainPosition);
+  const allInBb = roundBb(Math.min(state.stackBb, villainStack));
+  const potBb = roundBb((context.potBb || 0) + allInBb * 2);
+  const resultText = compare > 0 ? "Hero wins" : compare < 0 ? `${villainPosition} wins` : "Chop pot";
+
+  return {
+    villainPosition,
+    villainCards,
+    allInBb,
+    potBb,
+    resultText,
+    winner: compare > 0 ? "hero" : compare < 0 ? "villain" : "chop",
+    heroHandName: heroScore.name,
+    villainHandName: villainScore.name,
+  };
+}
+
+function renderShowdownSummary(showdown) {
+  const villainCards = showdown.villainCards.map((card) => `${card.rank}${card.suit.symbol}`).join(" ");
+  return `
+    <div class="showdown-summary">
+      <span>All-in showdown</span>
+      <strong>${showdown.resultText} · ${formatBb(showdown.potBb)}</strong>
+      <p>Hero ${showdown.heroHandName}; ${showdown.villainPosition} shows ${villainCards} for ${showdown.villainHandName}.</p>
+    </div>
+  `;
+}
+
+function cardsFromKeyExcluding(key, excludedCards) {
+  const parsed = parseHandKey(key);
+  const blocked = new Set(excludedCards.map(cardId));
+  const candidates = [];
+
+  if (parsed.high === parsed.low) {
+    suits.forEach((firstSuit, firstIndex) => {
+      suits.slice(firstIndex + 1).forEach((secondSuit) => {
+        candidates.push([
+          { rank: parsed.high, suit: firstSuit },
+          { rank: parsed.low, suit: secondSuit },
+        ]);
+      });
+    });
+  } else if (parsed.suited) {
+    suits.forEach((suit) => {
+      candidates.push([
+        { rank: parsed.high, suit },
+        { rank: parsed.low, suit },
+      ]);
+    });
+  } else {
+    suits.forEach((firstSuit) => {
+      suits.forEach((secondSuit) => {
+        if (firstSuit.name !== secondSuit.name) {
+          candidates.push([
+            { rank: parsed.high, suit: firstSuit },
+            { rank: parsed.low, suit: secondSuit },
+          ]);
+        }
+      });
+    });
+  }
+
+  const available = candidates.filter((cards) => cards.every((card) => !blocked.has(cardId(card))));
+  if (!available.length) return null;
+  return available[randomInt(0, available.length - 1)];
+}
+
+function scoreSevenCards(cards) {
+  const values = cards.map((card) => rankValue[card.rank]).sort((a, b) => b - a);
+  const counts = new Map();
+  const suitsByName = new Map();
+
+  cards.forEach((card) => {
+    const value = rankValue[card.rank];
+    counts.set(value, (counts.get(value) || 0) + 1);
+    if (!suitsByName.has(card.suit.name)) suitsByName.set(card.suit.name, []);
+    suitsByName.get(card.suit.name).push(value);
+  });
+
+  const groups = [...counts.entries()]
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => b.count - a.count || b.value - a.value);
+  const flushValues = [...suitsByName.values()].find((items) => items.length >= 5)?.sort((a, b) => b - a) || [];
+  const straightFlushHigh = flushValues.length ? straightHigh(flushValues) : 0;
+  if (straightFlushHigh) return handScore(8, [straightFlushHigh], "straight flush");
+
+  const quads = groups.find((group) => group.count === 4);
+  if (quads) {
+    const kicker = values.find((value) => value !== quads.value);
+    return handScore(7, [quads.value, kicker], "four of a kind");
+  }
+
+  const trips = groups.filter((group) => group.count === 3);
+  const pairs = groups.filter((group) => group.count === 2);
+  if (trips.length && (pairs.length || trips.length > 1)) {
+    const pairValue = pairs[0]?.value || trips[1].value;
+    return handScore(6, [trips[0].value, pairValue], "full house");
+  }
+
+  if (flushValues.length) return handScore(5, flushValues.slice(0, 5), "flush");
+
+  const straight = straightHigh(values);
+  if (straight) return handScore(4, [straight], "straight");
+
+  if (trips.length) {
+    const kickers = values.filter((value) => value !== trips[0].value).slice(0, 2);
+    return handScore(3, [trips[0].value, ...kickers], "three of a kind");
+  }
+
+  if (pairs.length >= 2) {
+    const topPairs = pairs.slice(0, 2).map((pair) => pair.value);
+    const kicker = values.find((value) => !topPairs.includes(value));
+    return handScore(2, [...topPairs, kicker], "two pair");
+  }
+
+  if (pairs.length === 1) {
+    const kickers = values.filter((value) => value !== pairs[0].value).slice(0, 3);
+    return handScore(1, [pairs[0].value, ...kickers], "one pair");
+  }
+
+  return handScore(0, values.slice(0, 5), "high card");
+}
+
+function handScore(rank, kickers, name) {
+  return { rank, kickers, name };
+}
+
+function straightHigh(values) {
+  const unique = [...new Set(values)];
+  if (unique.includes(14)) unique.push(1);
+  for (let high = 14; high >= 5; high -= 1) {
+    const sequence = [high, high - 1, high - 2, high - 3, high - 4];
+    if (sequence.every((value) => unique.includes(value))) return high;
+  }
+  return 0;
+}
+
+function compareScores(first, second) {
+  if (first.rank !== second.rank) return first.rank - second.rank;
+  const max = Math.max(first.kickers.length, second.kickers.length);
+  for (let index = 0; index < max; index += 1) {
+    const diff = (first.kickers[index] || 0) - (second.kickers[index] || 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
 }
 
 function renderBars(profile) {
@@ -715,6 +958,7 @@ function renderRange() {
       if (state.spot === "flopVsCbet" && state.context?.board && cardsOverlap(state.current.cards, state.context.board)) {
         rebuildContext(state.current);
       }
+      state.chosenAction = null;
       state.answered = false;
       render();
     });
@@ -841,6 +1085,7 @@ function randomTournamentSpot({ fullRandom = true, preserveScore = false } = {})
   }
   state.forcedOpener = state.context?.openerPosition || state.forcedOpener;
   state.runout = null;
+  state.chosenAction = null;
   state.answered = false;
   if (!preserveScore) {
     renderScore();
@@ -1276,17 +1521,50 @@ function buildSeatMarkup(context) {
       const seatState = describeSeat(position, context);
       const stack = getSeatStack(position);
       const isHero = position === state.position;
+      const visibleCards = seatState.revealedCards || null;
       return `
-        <div class="seat ${seatState.tone} ${stackClass(stack)} ${isHero ? "hero" : ""} align-${seat.align}" style="--seat-x:${seat.x}%; --seat-y:${seat.y}%;">
-          <div class="seat-label">${position}</div>
-          <div class="seat-stack">${formatStack(stack)}</div>
-          <div class="seat-action">${seatState.status}</div>
+        <div class="seat seat-${relativeIndex} ${seatState.tone} ${stackClass(stack)} ${seatState.folded ? "folded" : "live"} ${isHero ? "hero" : ""} align-${seat.align}" style="--seat-x:${seat.x}%; --seat-y:${seat.y}%;">
+          <div class="seat-main">
+            ${renderAvatar(position, seatState, isHero)}
+            <div class="seat-copy">
+              <div class="seat-label">${position}</div>
+              <div class="seat-stack">${formatStack(stack)}</div>
+              <div class="seat-action">${seatState.status}</div>
+            </div>
+          </div>
+          ${seatState.betBb ? renderBetStack(seatState.betBb) : ""}
           ${isHero ? `<div class="seat-hole-cards">${state.current.cards.map((card) => renderCard(card, "seat-card")).join("")}</div>` : ""}
-          ${seatState.showCards ? `<div class="mini-cards">${renderCardBack()}${renderCardBack()}</div>` : ""}
+          ${visibleCards ? `<div class="mini-cards revealed">${visibleCards.map((card) => renderCard(card, "seat-card")).join("")}</div>` : ""}
+          ${!visibleCards && seatState.showCards ? `<div class="mini-cards">${renderCardBack()}${renderCardBack()}</div>` : ""}
         </div>
       `;
     })
     .join("");
+}
+
+function renderAvatar(position, seatState, isHero) {
+  const avatar = getSeatAvatar(position);
+  return `
+    <div class="avatar ${avatar.variant} ${seatState.folded ? "is-folded" : ""} ${isHero ? "is-hero" : ""}" style="--avatar-hood:${avatar.hood}; --avatar-face:${avatar.face}; --avatar-blush:${avatar.blush}; --avatar-accent:${avatar.accent}; --avatar-eye:${avatar.eye};" aria-hidden="true">
+      <span class="avatar-ear left"></span>
+      <span class="avatar-ear right"></span>
+      <span class="avatar-face">
+        <i class="avatar-eye left"></i>
+        <i class="avatar-eye right"></i>
+        <i class="avatar-mouth"></i>
+        <i class="avatar-tooth"></i>
+      </span>
+    </div>
+  `;
+}
+
+function renderBetStack(amount) {
+  return `
+    <div class="bet-stack" aria-label="Bet ${formatBb(amount)}">
+      <i></i><i></i><i></i>
+      <span>${formatBb(amount)}</span>
+    </div>
+  `;
 }
 
 function buildSeatStacks(context) {
@@ -1314,6 +1592,19 @@ function buildSeatStacks(context) {
   });
 
   return stacks;
+}
+
+function buildSeatAvatars() {
+  return Object.fromEntries(
+    getActivePositions(state.tableSize).map((position) => [
+      position,
+      avatarStyles[randomInt(0, avatarStyles.length - 1)],
+    ]),
+  );
+}
+
+function getSeatAvatar(position) {
+  return state.seatAvatars[position] || avatarStyles[0];
 }
 
 function randomMttStack(isChipLeader, isVillain) {
@@ -1364,29 +1655,68 @@ function positionDealerChip() {
 
 function describeSeat(position, context) {
   const posted = blindPosted(position);
+  const actedBeforeHero = positionLeverage(position, state.tableSize) < positionLeverage(state.position, state.tableSize);
+  const showdown = state.runout?.showdown || null;
+
+  if (showdown) {
+    if (position === state.position) {
+      const won = showdown.winner === "hero";
+      const status = showdown.winner === "chop" ? "Chop pot" : won ? `Won ${formatBb(showdown.potBb)}` : "All-in";
+      return { status, tone: won ? "hero winner" : "hero", betBb: showdown.allInBb };
+    }
+
+    if (position === showdown.villainPosition) {
+      const won = showdown.winner === "villain";
+      const status = showdown.winner === "chop" ? "Chop pot" : won ? `Won ${formatBb(showdown.potBb)}` : "All-in call";
+      return {
+        status,
+        tone: won ? "aggressor winner" : "aggressor",
+        showCards: true,
+        revealedCards: showdown.villainCards,
+        betBb: showdown.allInBb,
+      };
+    }
+
+    if (posted > 0) {
+      return { status: "Folded", tone: "folded", folded: true, betBb: posted };
+    }
+
+    return { status: "Folded", tone: "folded", folded: true };
+  }
+
   if (position === state.position) {
-    if (context.spot === "vs3bet") return { status: `Opened ${formatBb(context.openSize)}`, tone: "hero" };
+    if (context.spot === "vs3bet") return { status: `Opened ${formatBb(context.openSize)}`, tone: "hero", betBb: context.openSize };
     if (context.spot === "flopVsCbet") return { status: "Hero to act", tone: "hero" };
-    return { status: "Hero to act", tone: "hero" };
+    return { status: "Hero to act", tone: "hero", betBb: posted || 0 };
+  }
+
+  if (context.spot === "open") {
+    if (actedBeforeHero && posted === 0) {
+      return { status: "Folded", tone: "folded", folded: true };
+    }
+    if (posted > 0) {
+      return { status: `${position} blind`, tone: "blind", showCards: true, betBb: posted };
+    }
+    return { status: "Still in", tone: "idle", showCards: true };
   }
 
   if (context.spot === "vsRaise" && position === context.openerPosition) {
-    return { status: `Open ${formatBb(context.openSize)}`, tone: "aggressor", showCards: true };
+    return { status: `Open ${formatBb(context.openSize)}`, tone: "aggressor", showCards: true, betBb: context.openSize };
   }
 
   if (context.spot === "vs3bet" && position === context.threeBettorPosition) {
-    return { status: `3-bet ${formatBb(context.threeBetSize)}`, tone: "aggressor", showCards: true };
+    return { status: `3-bet ${formatBb(context.threeBetSize)}`, tone: "aggressor", showCards: true, betBb: context.threeBetSize };
   }
 
   if (context.spot === "flopVsCbet" && position === context.openerPosition) {
-    return { status: `Bet ${formatBb(context.betSize)}`, tone: "aggressor", showCards: true };
+    return { status: `Bet ${formatBb(context.betSize)}`, tone: "aggressor", showCards: true, betBb: context.betSize };
   }
 
   if (posted > 0) {
-    return { status: `${position} ${formatBb(posted)}`, tone: "blind" };
+    return { status: "Folded", tone: "folded", folded: true, betBb: posted };
   }
 
-  return { status: "Waiting", tone: "idle" };
+  return { status: "Folded", tone: "folded", folded: true };
 }
 
 function renderCardBack() {
@@ -1549,6 +1879,7 @@ function normalizeState() {
 function rebuildContext(heroHand = state.current) {
   state.context = buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, heroHand, state.forcedOpener);
   state.seatStacks = buildSeatStacks(state.context);
+  state.seatAvatars = buildSeatAvatars();
 }
 
 function getActivePositions(tableSize) {
