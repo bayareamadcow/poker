@@ -188,6 +188,39 @@ h1 {
   padding: 0 10px;
 }
 
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.theme-chip {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-strong);
+  padding: 0 9px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.theme-chip span {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--theme-accent);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.42);
+}
+
+.theme-chip.is-active {
+  border-color: var(--green-deep);
+  background: var(--mint);
+}
+
 .stack-control,
 .hand-picker,
 .tool-row {
@@ -324,6 +357,28 @@ select {
   color: #fff;
 }
 
+.felt[data-theme="midnight"] {
+  background:
+    radial-gradient(ellipse at 42% 36%, rgba(103, 160, 207, 0.18), transparent 18rem),
+    repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.032) 0 2px, transparent 2px 11px),
+    linear-gradient(135deg, #253b5f 0%, #102235 100%);
+}
+
+.felt[data-theme="royal"] {
+  background:
+    radial-gradient(ellipse at 52% 30%, rgba(255, 255, 255, 0.14), transparent 18rem),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(135deg, #823a59 0%, #351b33 100%);
+  background-size: auto, 18px 18px, auto;
+}
+
+.felt[data-theme="sand"] {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, 0.2), transparent 19rem),
+    repeating-radial-gradient(circle at 50% 50%, rgba(77, 55, 31, 0.04) 0 2px, transparent 2px 12px),
+    linear-gradient(135deg, #9b7b45 0%, #335146 100%);
+}
+
 .felt::before {
   content: "";
   position: absolute;
@@ -416,6 +471,14 @@ select {
   border-color: rgba(255, 255, 255, 0.36);
 }
 
+.seat.short-stack {
+  box-shadow: 0 0 0 1px rgba(191, 63, 63, 0.55), 0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
+.seat.big-stack {
+  box-shadow: 0 0 0 1px rgba(194, 133, 46, 0.7), 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+
 .seat.aggressor {
   border-color: rgba(223, 242, 232, 0.42);
   background: rgba(9, 58, 41, 0.66);
@@ -441,6 +504,31 @@ select {
 
 .seat-action {
   color: #fff;
+}
+
+.seat-hole-cards {
+  display: flex;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.seat-card {
+  width: 34px;
+  border-radius: 5px;
+  padding: 4px;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.18);
+}
+
+.seat-card .card-corner {
+  font-size: 0.62rem;
+}
+
+.seat-card .card-center {
+  font-size: 1.1rem;
+}
+
+.seat-card .card-bottom {
+  display: none;
 }
 
 .scenario {

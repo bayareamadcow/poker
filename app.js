@@ -61,6 +61,32 @@ const spots = [
 
 const blindBattleSpots = new Set(["vsRaise", "flopVsCbet"]);
 
+const gameModes = {
+  mtt: {
+    label: "MTT Bubble",
+    minStack: 3,
+    maxStack: 45,
+    defaultStack: 18,
+    presets: [3, 5, 8, 12, 16, 20, 30, 40],
+    brand: "MTT bubble trainer",
+  },
+  cash: {
+    label: "Cash Deep",
+    minStack: 40,
+    maxStack: 200,
+    defaultStack: 100,
+    presets: [40, 60, 80, 100, 150, 200],
+    brand: "cash deep-stack trainer",
+  },
+};
+
+const tableThemes = [
+  { id: "emerald", label: "Emerald", accent: "#1d7a52" },
+  { id: "midnight", label: "Midnight", accent: "#31507b" },
+  { id: "royal", label: "Royal", accent: "#6b2f4a" },
+  { id: "sand", label: "Sand", accent: "#9b7b45" },
+];
+
 const realisticPositionWeights = {
   6: {
     open: { UTG: 5, HJ: 12, CO: 24, BTN: 38, SB: 21 },
@@ -203,11 +229,14 @@ const ranges = buildRanges(rangeText);
 
 const state = {
   view: "trainer",
+  gameMode: "mtt",
+  tableTheme: "emerald",
   tableSize: 8,
-  stackBb: 25,
+  stackBb: 18,
   position: "HJ",
   spot: "open",
   context: null,
+  seatStacks: {},
   current: makeHand("A", "J", true),
   selectedKey: "AJs",
   answered: false,
@@ -221,7 +250,10 @@ const state = {
 
 const el = {
   brandContext: document.querySelector("#brandContext"),
+  felt: document.querySelector(".felt"),
   tableSizeButtons: document.querySelector("#tableSizeButtons"),
+  gameModeButtons: document.querySelector("#gameModeButtons"),
+  themeButtons: document.querySelector("#themeButtons"),
   stackSize: document.querySelector("#stackSize"),
   stackSizeValue: document.querySelector("#stackSizeValue"),
   stackBandLabel: document.querySelector("#stackBandLabel"),
@@ -369,6 +401,44 @@ function renderControls() {
     });
   });
 
+  el.gameModeButtons.innerHTML = Object.entries(gameModes)
+    .map(
+      ([modeId, mode]) => `
+        <button type="button" data-mode="${modeId}" class="${state.gameMode === modeId ? "is-active" : ""}">
+          ${mode.label}
+        </button>
+      `,
+    )
+    .join("");
+  el.gameModeButtons.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.gameMode = button.dataset.mode;
+      const mode = gameModes[state.gameMode];
+      state.stackBb = mode.defaultStack;
+      state.context = null;
+      state.runout = null;
+      rebuildContext();
+      state.answered = false;
+      render();
+    });
+  });
+
+  el.themeButtons.innerHTML = tableThemes
+    .map(
+      (theme) => `
+        <button type="button" class="theme-chip ${state.tableTheme === theme.id ? "is-active" : ""}" data-theme="${theme.id}">
+          <span style="--theme-accent:${theme.accent}"></span>${theme.label}
+        </button>
+      `,
+    )
+    .join("");
+  el.themeButtons.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.tableTheme = button.dataset.theme;
+      render();
+    });
+  });
+
   const candidates = getCandidatePositions(state.spot, state.tableSize);
   el.positionButtons.innerHTML = getActivePositions(state.tableSize)
     .map((position) => {
@@ -405,10 +475,13 @@ function renderControls() {
     });
   });
 
+  const mode = gameModes[state.gameMode];
+  el.stackSize.min = String(mode.minStack);
+  el.stackSize.max = String(mode.maxStack);
   el.stackSize.value = String(state.stackBb);
   el.stackSizeValue.textContent = `${state.stackBb}BB`;
   el.stackBandLabel.textContent = stackBandLabel(state.stackBb);
-  el.stackPresetButtons.innerHTML = stackPresets
+  el.stackPresetButtons.innerHTML = mode.presets
     .map(
       (stack) => `
         <button type="button" data-stack="${stack}" class="preset-chip ${stack === state.stackBb ? "is-active" : ""}">
@@ -427,7 +500,7 @@ function renderControls() {
     });
   });
 
-  el.brandContext.textContent = `${tableConfigs[state.tableSize].label} tournament trainer · ${state.stackBb}BB`;
+  el.brandContext.textContent = `${tableConfigs[state.tableSize].label} ${mode.brand} · hero ${state.stackBb}BB`;
 }
 
 function renderRankPickers() {
@@ -462,7 +535,7 @@ function renderTrainer() {
   const lateFlag = isLatePosition(state.position, state.tableSize) ? "Late-position pressure" : "Earlier seat discipline";
   const actionNote = trainerActionNote(state.spot, context, actions);
 
-  el.scenarioText.textContent = `${tableConfigs[state.tableSize].label} · ${state.stackBb}BB · ${state.position} · ${spot.label}`;
+  el.scenarioText.textContent = `${gameModes[state.gameMode].label} · ${tableConfigs[state.tableSize].label} · ${state.position} · ${spot.label}`;
   el.scenarioMeta.innerHTML = `
     <span class="pill ghost">${stackBandLabel(state.stackBb)}</span>
     <span class="pill ghost">${lateFlag}</span>
@@ -471,7 +544,7 @@ function renderTrainer() {
   renderTableScene(context);
   el.contextStrip.innerHTML = buildContextStrip(context);
   el.heroHand.textContent = state.current.key;
-  el.holeCards.innerHTML = state.current.cards.map(renderCard).join("");
+  el.holeCards.innerHTML = "";
   el.actionButtons.innerHTML = actions
     .map((action) => `<button class="action-button ${actionClass(action)}" type="button" data-action="${action}">${action}</button>`)
     .join("");
@@ -515,6 +588,7 @@ function spotHint(spot, context) {
 }
 
 function renderTableScene(context) {
+  el.felt.dataset.theme = state.tableTheme;
   el.tableSeats.innerHTML = buildSeatMarkup(context);
   el.potBadge.innerHTML = `
     <span>Total Pot</span>
@@ -811,6 +885,12 @@ function trainingWeight(rec, strength, key, spot, stackBb, position, tableSize) 
 function getSpotActions(spotId, stackBb) {
   if (spotId === "flopVsCbet") {
     return ["Fold", "Call", "Raise"];
+  }
+
+  if (state.gameMode === "cash") {
+    if (spotId === "open") return ["Fold", "Raise"];
+    if (spotId === "vsRaise") return ["Fold", "Call", "3-bet"];
+    return ["Fold", "Call", "4-bet"];
   }
 
   if (spotId === "open") {
@@ -1194,16 +1274,82 @@ function buildSeatMarkup(context) {
       const relativeIndex = (index - heroIndex + positions.length) % positions.length;
       const seat = seatLayouts[state.tableSize][relativeIndex];
       const seatState = describeSeat(position, context);
+      const stack = getSeatStack(position);
+      const isHero = position === state.position;
       return `
-        <div class="seat ${seatState.tone} ${position === state.position ? "hero" : ""} align-${seat.align}" style="--seat-x:${seat.x}%; --seat-y:${seat.y}%;">
+        <div class="seat ${seatState.tone} ${stackClass(stack)} ${isHero ? "hero" : ""} align-${seat.align}" style="--seat-x:${seat.x}%; --seat-y:${seat.y}%;">
           <div class="seat-label">${position}</div>
-          <div class="seat-stack">${state.stackBb}BB</div>
+          <div class="seat-stack">${formatStack(stack)}</div>
           <div class="seat-action">${seatState.status}</div>
+          ${isHero ? `<div class="seat-hole-cards">${state.current.cards.map((card) => renderCard(card, "seat-card")).join("")}</div>` : ""}
           ${seatState.showCards ? `<div class="mini-cards">${renderCardBack()}${renderCardBack()}</div>` : ""}
         </div>
       `;
     })
     .join("");
+}
+
+function buildSeatStacks(context) {
+  const positions = getActivePositions(state.tableSize);
+  const stacks = {};
+  const villain = context.threeBettorPosition || context.openerPosition || context.villainPosition || "";
+  const chipLeader = weightedChoice(
+    positions
+      .filter((position) => position !== state.position)
+      .map((position) => ({ value: position, weight: position === villain ? 3 : 1 })),
+  );
+
+  positions.forEach((position) => {
+    if (position === state.position) {
+      stacks[position] = state.stackBb;
+      return;
+    }
+
+    if (state.gameMode === "cash") {
+      stacks[position] = randomCashStack(position === villain);
+      return;
+    }
+
+    stacks[position] = randomMttStack(position === chipLeader, position === villain);
+  });
+
+  return stacks;
+}
+
+function randomMttStack(isChipLeader, isVillain) {
+  if (isChipLeader) return randomInt(30, 45);
+  const band = weightedChoice([
+    { value: [3, 7], weight: 26 },
+    { value: [8, 14], weight: 32 },
+    { value: [15, 24], weight: isVillain ? 30 : 24 },
+    { value: [25, 36], weight: isVillain ? 18 : 10 },
+  ]);
+  return randomInt(band[0], band[1]);
+}
+
+function randomCashStack(isVillain) {
+  const band = weightedChoice([
+    { value: [60, 90], weight: isVillain ? 12 : 18 },
+    { value: [91, 130], weight: 42 },
+    { value: [131, 200], weight: 32 },
+    { value: [201, 260], weight: 8 },
+  ]);
+  return randomInt(band[0], band[1]);
+}
+
+function getSeatStack(position) {
+  return state.seatStacks[position] || (position === state.position ? state.stackBb : randomMttStack(false, false));
+}
+
+function formatStack(stack) {
+  return `${Math.round(stack)}BB`;
+}
+
+function stackClass(stack) {
+  if (state.gameMode === "cash") return stack >= 140 ? "big-stack" : stack <= 70 ? "short-stack" : "mid-stack";
+  if (stack <= 8) return "short-stack";
+  if (stack >= 30) return "big-stack";
+  return "mid-stack";
 }
 
 function positionDealerChip() {
@@ -1392,7 +1538,8 @@ function ensureCommentsEmbed() {
 }
 
 function normalizeState() {
-  state.stackBb = Math.max(5, Math.min(80, Number(state.stackBb) || 25));
+  const mode = gameModes[state.gameMode];
+  state.stackBb = Math.max(mode.minStack, Math.min(mode.maxStack, Number(state.stackBb) || mode.defaultStack));
   const candidates = getCandidatePositions(state.spot, state.tableSize);
   if (!candidates.includes(state.position)) {
     state.position = candidates[Math.floor(candidates.length / 2)];
@@ -1401,6 +1548,7 @@ function normalizeState() {
 
 function rebuildContext(heroHand = state.current) {
   state.context = buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, heroHand, state.forcedOpener);
+  state.seatStacks = buildSeatStacks(state.context);
 }
 
 function getActivePositions(tableSize) {
@@ -1590,10 +1738,15 @@ function isLatePosition(position, tableSize) {
 }
 
 function stackBandLabel(stackBb) {
+  if (state.gameMode === "cash") {
+    if (stackBb <= 70) return "Short cash stack";
+    if (stackBb <= 130) return "100BB cash zone";
+    return "Deep cash stack";
+  }
   if (stackBb <= 10) return "Push / fold stack";
   if (stackBb <= 20) return "Short stack";
-  if (stackBb <= 40) return "Middle stack";
-  return "Deep tournament stack";
+  if (stackBb <= 32) return "Average MTT stack";
+  return "Chip-leader stack";
 }
 
 function shallowOpenPenalty(stackBb, position, tableSize) {
@@ -1632,12 +1785,21 @@ function openThreshold(position, tableSize) {
 }
 
 function randomTournamentStack() {
+  if (state.gameMode === "cash") {
+    const band = weightedChoice([
+      { value: [60, 90], weight: 22 },
+      { value: [91, 130], weight: 44 },
+      { value: [131, 200], weight: 34 },
+    ]);
+    return randomInt(band[0], band[1]);
+  }
+
   const band = weightedChoice([
-    { value: [5, 10], weight: 17 },
-    { value: [11, 15], weight: 17 },
-    { value: [16, 25], weight: 24 },
-    { value: [26, 40], weight: 21 },
-    { value: [41, 80], weight: 21 },
+    { value: [3, 6], weight: 18 },
+    { value: [7, 12], weight: 28 },
+    { value: [13, 20], weight: 28 },
+    { value: [21, 32], weight: 18 },
+    { value: [33, 42], weight: 8 },
   ]);
 
   return randomInt(band[0], band[1]);

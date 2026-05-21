@@ -33,7 +33,17 @@
           </section>
 
           <section class="rail-section">
-            <span class="section-label">Effective Stack</span>
+            <span class="section-label">Mode</span>
+            <div class="segmented stacked" id="gameModeButtons"></div>
+          </section>
+
+          <section class="rail-section">
+            <span class="section-label">Felt</span>
+            <div class="theme-grid" id="themeButtons"></div>
+          </section>
+
+          <section class="rail-section">
+            <span class="section-label">Hero Stack</span>
             <div class="stack-control">
               <input id="stackSize" type="range" min="5" max="80" value="25" />
               <div class="stack-readout">
@@ -79,7 +89,7 @@
           <section class="rail-section">
             <span class="section-label">Question Mix</span>
             <div class="tool-row">
-              <button class="ghost-button strong" type="button" id="randomSpot">Random MTT Spot</button>
+              <button class="ghost-button strong" type="button" id="randomSpot">Random Spot</button>
               <button class="ghost-button" type="button" id="sameContextHand">New Hand Same Spot</button>
             </div>
           </section>
