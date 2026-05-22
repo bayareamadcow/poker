@@ -53,10 +53,10 @@ const tableConfigs = {
 
 const stackPresets = [8, 10, 12, 15, 20, 30, 40, 60, 80];
 const spots = [
-  { id: "open", label: "Open First In" },
-  { id: "vsRaise", label: "Facing Raise" },
-  { id: "vs3bet", label: "Facing 3-bet" },
-  { id: "flopVsCbet", label: "Flop vs C-bet" },
+  { id: "open", labelKey: "spot.open" },
+  { id: "vsRaise", labelKey: "spot.vsRaise" },
+  { id: "vs3bet", labelKey: "spot.vs3bet" },
+  { id: "flopVsCbet", labelKey: "spot.flopVsCbet" },
 ];
 
 const blindBattleSpots = new Set(["vsRaise", "flopVsCbet"]);
@@ -96,6 +96,240 @@ const avatarStyles = [
   { hood: "#d9b45d", face: "#f0d8b8", blush: "#c97958", accent: "#3a3a32", eye: "#10100c", variant: "gold" },
   { hood: "#40765b", face: "#dcc1a5", blush: "#b96a65", accent: "#b8e0c8", eye: "#101512", variant: "moss" },
   { hood: "#d8d9df", face: "#caa17e", blush: "#bb6e70", accent: "#151515", eye: "#161616", variant: "pale" },
+];
+
+const i18n = {
+  en: {
+    "nav.trainer": "Trainer",
+    "nav.range": "Range",
+    "nav.odds": "Odds",
+    "nav.notes": "Notes",
+    "nav.comments": "Comments",
+    "label.table": "Table",
+    "label.mode": "Mode",
+    "label.felt": "Felt",
+    "label.heroStack": "Hero Stack",
+    "label.position": "Position",
+    "label.spot": "Spot",
+    "label.hand": "Hand",
+    "label.highCard": "High card",
+    "label.lowCard": "Low card",
+    "label.shape": "Shape",
+    "label.questionMix": "Question Mix",
+    "label.potSize": "Pot size",
+    "label.callSize": "Call size",
+    "label.cleanOuts": "Clean outs",
+    "metric.breakEven": "Break-even equity",
+    "metric.equity": "Estimated equity",
+    "button.useHand": "Use This Hand",
+    "button.randomSpot": "Random Spot",
+    "button.sameSpot": "New Hand Same Spot",
+    "button.shuffle": "Shuffle",
+    "button.playOut": "Run It",
+    "button.turnRiver": "Turn + River",
+    "button.oneCard": "One card",
+    "button.leaveFeedback": "Leave Feedback",
+    "button.readComments": "Read Saved Comments",
+    "score.accuracy": "Accuracy",
+    "score.streak": "Streak",
+    "score.hands": "Hands",
+    "panel.solverLine": "Solver Line",
+    "panel.matrix": "169-Hand Matrix",
+    "panel.currentCombo": "Current Combo",
+    "panel.oddsLab": "Pot Odds Lab",
+    "panel.rule24": "Rule of 2 / 4",
+    "panel.feedback": "Feedback Wall",
+    "panel.savedGithub": "Saved in GitHub",
+    "comments.note": "People can leave comments here with a GitHub login. If the inline thread does not load, use the GitHub buttons and you can read everything later in the repo.",
+    "result.waiting": "Choose an action, then compare it with the tournament recommendation.",
+    "spot.open": "Open First In",
+    "spot.vsRaise": "Facing Raise",
+    "spot.vs3bet": "Facing 3-bet",
+    "spot.flopVsCbet": "Flop vs C-bet",
+    "mode.mtt": "MTT Bubble",
+    "mode.cash": "Cash Deep",
+    "theme.emerald": "Emerald",
+    "theme.midnight": "Midnight",
+    "theme.royal": "Royal",
+    "theme.sand": "Sand",
+    "action.fold": "Fold",
+    "action.call": "Call",
+    "action.raise": "Raise",
+    "action.jam": "Jam",
+    "action.3bet": "3-bet",
+    "action.4bet": "4-bet",
+    "action.check": "Check",
+    "action.bet": "Bet",
+    "action.threebet": "3-bet / 4-bet",
+    "action.mixed": "Mixed",
+    "table.totalPot": "Total Pot",
+    "table.toCall": "To call",
+    "table.unopened": "Unopened",
+    "table.board": "Board",
+    "table.flop": "Flop",
+    "table.turn": "Turn",
+    "table.river": "River",
+    "table.heroToAct": "Hero to act",
+    "table.folded": "Folded",
+    "table.stillIn": "Still in",
+    "table.blind": "blind",
+    "table.open": "Open",
+    "table.bet": "Bet",
+    "table.opened": "Opened",
+    "table.allIn": "All-in",
+    "table.allInCall": "All-in call",
+    "table.chopPot": "Chop pot",
+    "table.won": "Won",
+    "runout.street": "Street by street",
+    "runout.showdown": "All-in reveal",
+    "runout.cueStreet": "Run only the next street, answer the decision, then continue to turn or river.",
+    "runout.cueShowdown": "Use this when the money is already in. It reveals a likely opponent hand and runs to the river.",
+    "runout.adviceLabel": "Recommended next step",
+    "runout.quizLabel": "Street decision",
+    "runout.villainLine": "Villain line",
+    "runout.question": "What should Hero do?",
+    "runout.correct": "Good choice",
+    "runout.review": "Review this spot",
+    "runout.correctLine": "Best line",
+    "runout.mixedLine": "Mixed line",
+    "runout.checkedToHero": "Checked to Hero",
+    "runout.showdownLabel": "All-in showdown",
+    "runout.noMoreAction": "No more betting decision: the money is in. Read the shown hands, then review whether the all-in line was correct before the runout.",
+    "runout.foldedAdvice": "If you chose Fold, the hand ends here. Use this runout only as review: do not chase future cards after a correct fold.",
+    "button.dealFlop": "Deal Flop",
+    "button.dealTurn": "Deal Turn",
+    "button.dealRiver": "Deal River",
+    "button.showdown": "Showdown",
+    "odds.good": "Good call",
+    "odds.thin": "Thin call",
+    "odds.bad": "Not enough equity",
+    "line.on": "On line",
+    "line.off": "Off line",
+    "line.selected": "Selected",
+    "line.main": "Main line",
+    "line.mix": "mix",
+    "line.prefers": "The model prefers",
+    "suited": "Suited",
+    "offsuit": "Offsuit",
+  },
+  zh: {
+    "nav.trainer": "训练",
+    "nav.range": "范围",
+    "nav.odds": "赔率",
+    "nav.notes": "笔记",
+    "nav.comments": "留言",
+    "label.table": "桌型",
+    "label.mode": "模式",
+    "label.felt": "桌布",
+    "label.heroStack": "我的筹码",
+    "label.position": "位置",
+    "label.spot": "题型",
+    "label.hand": "手牌",
+    "label.highCard": "大牌",
+    "label.lowCard": "小牌",
+    "label.shape": "花色",
+    "label.questionMix": "练习",
+    "label.potSize": "底池",
+    "label.callSize": "跟注额",
+    "label.cleanOuts": "干净 outs",
+    "metric.breakEven": "盈亏平衡权益",
+    "metric.equity": "估算权益",
+    "button.useHand": "用这手牌",
+    "button.randomSpot": "随机题",
+    "button.sameSpot": "同局换手牌",
+    "button.shuffle": "换题",
+    "button.playOut": "跑牌",
+    "button.turnRiver": "转牌+河牌",
+    "button.oneCard": "一张牌",
+    "button.leaveFeedback": "留下反馈",
+    "button.readComments": "查看留言",
+    "score.accuracy": "准确率",
+    "score.streak": "连对",
+    "score.hands": "手数",
+    "panel.solverLine": "建议线路",
+    "panel.matrix": "169 手牌矩阵",
+    "panel.currentCombo": "当前手牌",
+    "panel.oddsLab": "底池赔率",
+    "panel.rule24": "2/4 法则",
+    "panel.feedback": "反馈墙",
+    "panel.savedGithub": "保存在 GitHub",
+    "comments.note": "别人可以用 GitHub 登录留言。如果内嵌留言没加载，用 GitHub 按钮也能保存，之后你可以回仓库慢慢看。",
+    "result.waiting": "先做决定，再对照锦标赛建议。",
+    "spot.open": "无人入池开池",
+    "spot.vsRaise": "面对加注",
+    "spot.vs3bet": "面对 3-bet",
+    "spot.flopVsCbet": "翻牌面对 c-bet",
+    "mode.mtt": "锦标赛钱圈",
+    "mode.cash": "现金深筹",
+    "theme.emerald": "翡翠",
+    "theme.midnight": "午夜",
+    "theme.royal": "皇家",
+    "theme.sand": "沙色",
+    "action.fold": "弃牌",
+    "action.call": "跟注",
+    "action.raise": "加注",
+    "action.jam": "全下",
+    "action.3bet": "3-bet",
+    "action.4bet": "4-bet",
+    "action.check": "过牌",
+    "action.bet": "下注",
+    "action.threebet": "3-bet / 4-bet",
+    "action.mixed": "混合",
+    "table.totalPot": "总底池",
+    "table.toCall": "跟注",
+    "table.unopened": "无人入池",
+    "table.board": "公共牌",
+    "table.flop": "翻牌",
+    "table.turn": "转牌",
+    "table.river": "河牌",
+    "table.heroToAct": "轮到我行动",
+    "table.folded": "已弃牌",
+    "table.stillIn": "还在池里",
+    "table.blind": "盲注",
+    "table.open": "开池",
+    "table.bet": "下注",
+    "table.opened": "已开池",
+    "table.allIn": "全下",
+    "table.allInCall": "跟全下",
+    "table.chopPot": "平分底池",
+    "table.won": "赢下",
+    "runout.street": "一街一街",
+    "runout.showdown": "全下摊牌",
+    "runout.cueStreet": "每次只发下一街，先回答这一街怎么打，再继续到转牌或河牌。",
+    "runout.cueShowdown": "钱已经打进去时使用，会翻出一个合理对手手牌并跑到河牌。",
+    "runout.adviceLabel": "下一步建议",
+    "runout.quizLabel": "街牌决策",
+    "runout.villainLine": "对手线路",
+    "runout.question": "Hero 应该怎么打？",
+    "runout.correct": "选择正确",
+    "runout.review": "复盘这个点",
+    "runout.correctLine": "最佳线路",
+    "runout.mixedLine": "混合线路",
+    "runout.checkedToHero": "对手过牌到你",
+    "runout.showdownLabel": "全下摊牌",
+    "runout.noMoreAction": "钱已经进去了，后面没有下注决定。重点复盘：全下之前这条线是不是正确。",
+    "runout.foldedAdvice": "如果你选择弃牌，这手牌已经结束。这个 runout 只能用来复盘，不应该因为后面发中牌就否定正确弃牌。",
+    "button.dealFlop": "发翻牌",
+    "button.dealTurn": "发转牌",
+    "button.dealRiver": "发河牌",
+    "button.showdown": "摊牌",
+    "odds.good": "可以跟",
+    "odds.thin": "边缘跟注",
+    "odds.bad": "权益不够",
+    "line.on": "在线路内",
+    "line.off": "偏离线路",
+    "line.selected": "已选择",
+    "line.main": "主线",
+    "line.mix": "混合",
+    "line.prefers": "模型建议",
+    "suited": "同花",
+    "offsuit": "不同花",
+  },
+};
+
+const runoutModes = [
+  { id: "street", labelKey: "runout.street" },
+  { id: "showdown", labelKey: "runout.showdown" },
 ];
 
 const realisticPositionWeights = {
@@ -239,6 +473,7 @@ const allHands = buildHands();
 const ranges = buildRanges(rangeText);
 
 const state = {
+  lang: localStorage.getItem("pokerSolverLang") || "zh",
   view: "trainer",
   gameMode: "mtt",
   tableTheme: "emerald",
@@ -257,6 +492,7 @@ const state = {
   played: 0,
   streak: 0,
   streetMode: "two",
+  runoutMode: "street",
   runout: null,
   forcedOpener: null,
 };
@@ -264,6 +500,7 @@ const state = {
 const el = {
   brandContext: document.querySelector("#brandContext"),
   felt: document.querySelector(".felt"),
+  languageButtons: document.querySelector("#languageButtons"),
   tableSizeButtons: document.querySelector("#tableSizeButtons"),
   gameModeButtons: document.querySelector("#gameModeButtons"),
   themeButtons: document.querySelector("#themeButtons"),
@@ -294,6 +531,7 @@ const el = {
   resultBox: document.querySelector("#resultBox"),
   frequencyBars: document.querySelector("#frequencyBars"),
   explainBox: document.querySelector("#explainBox"),
+  runoutModeButtons: document.querySelector("#runoutModeButtons"),
   playOutHand: document.querySelector("#playOutHand"),
   runoutBox: document.querySelector("#runoutBox"),
   nextHand: document.querySelector("#nextHand"),
@@ -319,6 +557,36 @@ const el = {
 
 init();
 
+function t(key) {
+  return i18n[state.lang]?.[key] || i18n.en[key] || key;
+}
+
+function actionLabel(action) {
+  const key = {
+    Fold: "action.fold",
+    Call: "action.call",
+    Raise: "action.raise",
+    Jam: "action.jam",
+    "3-bet": "action.3bet",
+    "4-bet": "action.4bet",
+    Check: "action.check",
+    Bet: "action.bet",
+  }[action];
+  return key ? t(key) : action;
+}
+
+function spotLabel(spotId) {
+  return t(spots.find((spot) => spot.id === spotId)?.labelKey || spotId);
+}
+
+function gameModeLabel(modeId) {
+  return t(`mode.${modeId}`);
+}
+
+function themeLabel(themeId) {
+  return t(`theme.${themeId}`);
+}
+
 function init() {
   renderRankPickers();
   renderNotes();
@@ -327,6 +595,14 @@ function init() {
 }
 
 function bindEvents() {
+  el.languageButtons.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.lang = button.dataset.lang;
+      localStorage.setItem("pokerSolverLang", state.lang);
+      render();
+    });
+  });
+
   document.querySelectorAll(".tab").forEach((button) => {
     button.addEventListener("click", () => {
       state.view = button.dataset.view;
@@ -384,12 +660,26 @@ function bindEvents() {
 
 function render() {
   normalizeState();
+  renderStaticText();
   renderControls();
   syncPickers();
   renderTrainer();
   renderRange();
   renderOdds();
+  renderNotes();
   renderScore();
+}
+
+function renderStaticText() {
+  document.documentElement.lang = state.lang === "zh" ? "zh-Hans" : "en";
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    node.textContent = t(node.dataset.i18n);
+  });
+  el.languageButtons.querySelectorAll("button").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.lang === state.lang);
+  });
+  el.suitedness.querySelector('[value="s"]').textContent = t("suited");
+  el.suitedness.querySelector('[value="o"]').textContent = t("offsuit");
 }
 
 function renderControls() {
@@ -419,9 +709,9 @@ function renderControls() {
 
   el.gameModeButtons.innerHTML = Object.entries(gameModes)
     .map(
-      ([modeId, mode]) => `
+      ([modeId]) => `
         <button type="button" data-mode="${modeId}" class="${state.gameMode === modeId ? "is-active" : ""}">
-          ${mode.label}
+          ${gameModeLabel(modeId)}
         </button>
       `,
     )
@@ -444,7 +734,7 @@ function renderControls() {
     .map(
       (theme) => `
         <button type="button" class="theme-chip ${state.tableTheme === theme.id ? "is-active" : ""}" data-theme="${theme.id}">
-          <span style="--theme-accent:${theme.accent}"></span>${theme.label}
+          <span style="--theme-accent:${theme.accent}"></span>${themeLabel(theme.id)}
         </button>
       `,
     )
@@ -478,7 +768,7 @@ function renderControls() {
   });
 
   el.spotButtons.innerHTML = spots
-    .map((spot) => `<button type="button" data-spot="${spot.id}" class="${state.spot === spot.id ? "is-active" : ""}">${spot.label}</button>`)
+    .map((spot) => `<button type="button" data-spot="${spot.id}" class="${state.spot === spot.id ? "is-active" : ""}">${spotLabel(spot.id)}</button>`)
     .join("");
   el.spotButtons.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
@@ -520,7 +810,8 @@ function renderControls() {
     });
   });
 
-  el.brandContext.textContent = `${tableConfigs[state.tableSize].label} ${mode.brand} · hero ${state.stackBb}BB`;
+  const brandMode = state.lang === "zh" ? gameModeLabel(state.gameMode) : mode.brand;
+  el.brandContext.textContent = `${tableConfigs[state.tableSize].label} ${brandMode} · Hero ${state.stackBb}BB`;
 }
 
 function renderRankPickers() {
@@ -552,10 +843,10 @@ function renderTrainer() {
   const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, state.current);
   const rec = recommend(state.current.key, state.position, state.spot, state.tableSize, state.stackBb, context);
   const actions = getSpotActions(state.spot, state.stackBb);
-  const lateFlag = isLatePosition(state.position, state.tableSize) ? "Late pressure" : "Early discipline";
+  const lateFlag = isLatePosition(state.position, state.tableSize) ? (state.lang === "zh" ? "后位压力" : "Late pressure") : (state.lang === "zh" ? "前位纪律" : "Early discipline");
   const actionNote = trainerActionNote(state.spot, context, actions);
 
-  el.scenarioText.textContent = `${gameModes[state.gameMode].label} · ${tableConfigs[state.tableSize].label} · ${state.position} · ${spot.label}`;
+  el.scenarioText.textContent = `${gameModeLabel(state.gameMode)} · ${tableConfigs[state.tableSize].label} · ${state.position} · ${spotLabel(spot.id)}`;
   el.scenarioMeta.innerHTML = `
     <span class="pill ghost">${compactStackBandLabel(state.stackBb)}</span>
     <span class="pill ghost">${lateFlag}</span>
@@ -566,44 +857,58 @@ function renderTrainer() {
   el.heroHand.textContent = state.current.key;
   el.holeCards.innerHTML = "";
   el.actionButtons.innerHTML = actions
-    .map((action) => `<button class="action-button ${actionClass(action)}" type="button" data-action="${action}">${action}</button>`)
+    .map((action) => `<button class="action-button ${actionClass(action)}" type="button" data-action="${action}">${actionLabel(action)}</button>`)
     .join("");
   el.actionButtons.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => chooseAction(button.dataset.action, rec));
   });
 
   if (!state.answered) {
-    el.resultBox.innerHTML = "<p>Choose an action, then compare it with the tournament recommendation.</p>";
+    el.resultBox.innerHTML = `<p>${t("result.waiting")}</p>`;
     el.frequencyBars.innerHTML = renderBars(hiddenProfile(actions));
     el.explainBox.innerHTML = `<p>${spotHint(state.spot, context)}</p>`;
+    renderRunoutModes();
     renderRunoutBox(context, rec);
     return;
   }
 
   renderRecommendation(rec, state.chosenAction);
+  renderRunoutModes();
   renderRunoutBox(context, rec);
 }
 
 function trainerActionNote(spot, context, actions) {
-  if (spot === "open") return "No call unopened";
-  if (!actions.includes("Call")) return "Jam or fold";
+  if (spot === "open") return state.lang === "zh" ? "无人池不跟注" : "No call unopened";
+  if (!actions.includes("Call")) return state.lang === "zh" ? "全下或弃牌" : "Jam or fold";
   if (spot === "flopVsCbet") return `${formatBb(context.betSize)} c-bet`;
-  return "Call available";
+  return state.lang === "zh" ? "可以跟注" : "Call available";
 }
 
 function spotHint(spot, context) {
   if (spot === "open") {
+    if (state.lang === "zh") {
+      return "无人入池时没有 Call 选项，因为前面没人下注。面对 open、3-bet 或翻牌 c-bet 时，Call 会出现。";
+    }
     return "Open spots do not show Call because nobody has entered the pot yet. Once you face an open, a 3-bet, or a flop c-bet, Call comes back into the action row.";
   }
 
   if (spot === "flopVsCbet") {
+    if (state.lang === "zh") {
+      return `你翻前跟注，翻牌是 ${boardText(context.board)}，对手在 ${formatBb(context.potBeforeBet)} 底池里 c-bet ${formatBb(context.betSize)}。用对子强度、听牌、位置来决定弃牌、跟注还是加注。`;
+    }
     return `You called preflop, the flop is ${boardText(context.board)}, and the opener fires ${formatBb(context.betSize)} into ${formatBb(context.potBeforeBet)}. Use pair strength, draws, and position to decide between fold, call, and raise.`;
   }
 
   if ((spot === "vsRaise" || spot === "vs3bet") && !getSpotActions(state.spot, state.stackBb).includes("Call")) {
+    if (state.lang === "zh") {
+      return `${state.stackBb}BB 这种短筹分支主要是全下或弃牌，所以 Call 会消失。训练器在逼近真实锦标赛短筹反应。`;
+    }
     return `At ${state.stackBb}BB this branch is intentionally jam-or-fold. That is why Call disappears even though you are facing action. The trainer is pushing the shorter-stack tournament response instead of a flatting line.`;
   }
 
+  if (state.lang === "zh") {
+    return "锦标赛题目会结合桌型、筹码深度、位置和压力。重点看谁开池、下注多大、你需要投入多少继续。";
+  }
   return "Tournament spots mix table size, stack depth, position, and pressure. Look at who opened, how big they made it, and how much you must continue for.";
 }
 
@@ -611,14 +916,19 @@ function renderTableScene(context) {
   el.felt.dataset.theme = state.tableTheme;
   el.tableSeats.innerHTML = buildSeatMarkup(context);
   const displayBoard = state.runout?.board || context.board || [];
-  const displayPot = state.runout?.showdown?.potBb || context.potBb || 0;
+  const streetLine = state.runout?.quiz?.line || null;
+  const displayPot = state.runout?.showdown?.potBb || streetLine?.potAfterBb || context.potBb || 0;
   const potNote = state.runout?.showdown
-    ? state.runout.showdown.resultText
-    : context.toCallBb
-      ? `To call ${formatBb(context.toCallBb)}`
-      : "Unopened";
+    ? showdownResultText(state.runout.showdown)
+    : streetLine?.action === "Bet"
+      ? `${t("table.toCall")} ${formatBb(streetLine.betBb)}`
+      : streetLine?.action === "Check"
+        ? t("runout.checkedToHero")
+        : context.toCallBb
+      ? `${t("table.toCall")} ${formatBb(context.toCallBb)}`
+      : t("table.unopened");
   el.potBadge.innerHTML = `
-    <span>Total Pot</span>
+    <span>${t("table.totalPot")}</span>
     <strong>${formatBb(displayPot)}</strong>
     <em>${potNote}</em>
   `;
@@ -631,7 +941,11 @@ function renderTableScene(context) {
     return;
   }
 
-  el.boardLabel.textContent = displayBoard.length === 5 ? "Board" : context.boardLabel || "Flop";
+  el.boardLabel.textContent = displayBoard.length >= 5
+    ? t("table.board")
+    : displayBoard.length === 4
+      ? t("table.turn")
+      : t("table.flop");
   el.boardCards.innerHTML = displayBoard.map((card) => renderCard(card, "board-card")).join("");
 }
 
@@ -655,62 +969,609 @@ function chooseAction(action, rec) {
 }
 
 function renderRecommendation(rec, chosen = null) {
-  const picked = chosen || "Selected";
+  const picked = chosen ? actionLabel(chosen) : t("line.selected");
   const isCorrect = !chosen || chosen === rec.primary || chosen === rec.secondary;
-  const tone = isCorrect ? "On line" : "Off line";
+  const tone = isCorrect ? t("line.on") : t("line.off");
   el.resultBox.innerHTML = `
     <strong>${tone} · ${picked}</strong>
-    <p>Main line: ${rec.primary}${rec.secondary ? ` / mix: ${rec.secondary}` : ""}. The model prefers ${rec.primary} ${rec.primaryFreq}% of the time.</p>
+    <p>${t("line.main")}: ${actionLabel(rec.primary)}${rec.secondary ? ` / ${t("line.mix")}: ${actionLabel(rec.secondary)}` : ""}. ${t("line.prefers")} ${actionLabel(rec.primary)} ${rec.primaryFreq}%.</p>
   `;
   el.frequencyBars.innerHTML = renderBars(rec.profile);
-  el.explainBox.innerHTML = `<p>${rec.note}</p>`;
+  el.explainBox.innerHTML = `<p>${localizedRecNote(rec, state.context)}</p>`;
 }
 
 function playOutCurrentHand() {
   const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, state.current);
   const rec = recommend(state.current.key, state.position, state.spot, state.tableSize, state.stackBb, context);
   const chosenAction = state.chosenAction || rec.primary;
-  const startingBoard = Array.isArray(context.board) ? [...context.board] : drawRandomCards(3, state.current.cards);
-  const showdownVillain = shouldOpenShowdown(chosenAction, rec) ? pickShowdownVillain(context) : null;
-  const villainCards = showdownVillain ? drawVillainCards(showdownVillain, context, [...state.current.cards, ...startingBoard]) : [];
-  const excluded = [...state.current.cards, ...villainCards, ...startingBoard];
-  const remainingBoard = drawRandomCards(Math.max(0, 5 - startingBoard.length), excluded);
-  const fullBoard = [...startingBoard, ...remainingBoard];
-  const outcome = assessRunout(state.current.cards, fullBoard);
-  const showdown = showdownVillain
-    ? buildShowdownResult(context, showdownVillain, villainCards, fullBoard)
-    : null;
+
+  if (state.runout?.quiz && !state.runout.quiz.chosen) {
+    state.runout.advice = {
+      tone: "draw",
+      title: state.lang === "zh" ? "先回答这一街" : "Answer this street first",
+      body: state.lang === "zh"
+        ? "先选择这一街该怎么打，再继续发下一张牌。训练重点是做决定，不是直接看结果。"
+        : "Choose the action for this street before dealing the next card. The training goal is the decision, not just the runout.",
+    };
+    render();
+    return;
+  }
+
+  if (state.runout?.quiz?.chosen === "Fold") {
+    state.runout.advice = {
+      tone: "fold",
+      title: actionLabel("Fold"),
+      body: t("runout.foldedAdvice"),
+    };
+    render();
+    return;
+  }
+
+  if (chosenAction === "Fold" && state.runoutMode !== "showdown") {
+    const board = state.runout?.board?.length ? [...state.runout.board] : Array.isArray(context.board) ? [...context.board] : [];
+    const outcome = assessRunout(state.current.cards, board);
+    state.runout = {
+      mode: "street",
+      flop: board.slice(0, 3),
+      turn: board[3],
+      river: board[4],
+      board,
+      outcome,
+      showdown: null,
+      quiz: null,
+      advice: buildRunoutAdvice(context, rec, chosenAction, board, outcome, null),
+    };
+    render();
+    return;
+  }
+
+  const seedBoard = state.runout?.board?.length
+    ? [...state.runout.board]
+    : Array.isArray(context.board)
+      ? [...context.board]
+      : [];
+  const revealShowdown = state.runoutMode === "showdown" || shouldOpenShowdown(chosenAction, rec) || seedBoard.length >= 5;
+
+  if (revealShowdown) {
+    state.runout = buildShowdownRunout(context, rec, chosenAction, seedBoard);
+    render();
+    return;
+  }
+
+  const runoutBoard = drawNextStreetBoard(seedBoard);
+  const outcome = assessRunout(state.current.cards, runoutBoard);
+  const priorPot = resolveRunoutPotAfterHero(state.runout?.quiz) || estimateRunoutPot(context, chosenAction);
+  const quiz = buildStreetQuiz(context, rec, chosenAction, runoutBoard, priorPot);
+  const advice = buildRunoutAdvice(context, rec, chosenAction, runoutBoard, outcome, null, quiz);
 
   state.runout = {
-    flop: fullBoard.slice(0, 3),
-    turn: fullBoard[3],
-    river: fullBoard[4],
-    board: fullBoard,
+    mode: "street",
+    flop: runoutBoard.slice(0, 3),
+    turn: runoutBoard[3],
+    river: runoutBoard[4],
+    board: runoutBoard,
     outcome,
-    showdown,
+    showdown: null,
+    quiz,
+    advice,
   };
   render();
 }
 
+function resolveRunoutPotAfterHero(quiz) {
+  if (!quiz?.chosen) return 0;
+  const line = quiz.line;
+  if (quiz.chosen === "Fold") return 0;
+  if (line.action === "Check") {
+    if (quiz.chosen === "Bet") {
+      const betBb = roundBb(Math.max(1, line.potBeforeBb * 0.55));
+      return roundBb(line.potBeforeBb + betBb);
+    }
+    return line.potBeforeBb;
+  }
+
+  if (quiz.chosen === "Raise") {
+    const raiseToBb = roundBb(line.betBb * 2.6);
+    return roundBb(line.potBeforeBb + line.betBb + raiseToBb);
+  }
+
+  if (quiz.chosen === "Call") {
+    return roundBb(line.potBeforeBb + line.betBb * 2);
+  }
+
+  return line.potAfterBb;
+}
+
+function buildShowdownRunout(context, rec, chosenAction, seedBoard = []) {
+  const startingBoard = seedBoard.length ? [...seedBoard] : Array.isArray(context.board) ? [...context.board] : [];
+  const showdownVillain = pickShowdownVillain(context);
+  const villainCards = drawVillainCards(showdownVillain, context, [...state.current.cards, ...startingBoard]);
+  const board = fillBoardToRiver(startingBoard, [...state.current.cards, ...villainCards]);
+  const outcome = assessRunout(state.current.cards, board);
+  const showdown = buildShowdownResult(context, showdownVillain, villainCards, board);
+
+  return {
+    mode: "showdown",
+    flop: board.slice(0, 3),
+    turn: board[3],
+    river: board[4],
+    board,
+    outcome,
+    showdown,
+    quiz: null,
+    advice: buildRunoutAdvice(context, rec, chosenAction, board, outcome, showdown),
+  };
+}
+
+function drawNextStreetBoard(seedBoard = []) {
+  const targetCount = seedBoard.length < 3 ? 3 : Math.min(5, seedBoard.length + 1);
+  const excluded = [...state.current.cards, ...seedBoard];
+  return [...seedBoard, ...drawRandomCards(Math.max(0, targetCount - seedBoard.length), excluded)];
+}
+
+function fillBoardToRiver(seedBoard = [], extraExcluded = []) {
+  const excluded = [...state.current.cards, ...extraExcluded, ...seedBoard];
+  return [...seedBoard, ...drawRandomCards(Math.max(0, 5 - seedBoard.length), excluded)];
+}
+
+function estimateRunoutPot(context, chosenAction) {
+  if (context.spot === "flopVsCbet") {
+    if (chosenAction === "Call") return roundBb((context.potBeforeBet || 0) + (context.betSize || 0) * 2);
+    if (chosenAction === "Raise") return roundBb((context.potBeforeBet || 0) + (context.betSize || 0) * 3);
+    return context.potBb || context.potBeforeBet || 2.5;
+  }
+
+  if (chosenAction === "Call") return roundBb((context.potBb || 0) + (context.toCallBb || 0));
+  if (["Raise", "3-bet", "4-bet"].includes(chosenAction)) {
+    const pressure = Math.max(context.toCallBb || 0, context.openSize || 2.2, context.threeBetSize || 0);
+    return roundBb((context.potBb || 0) + pressure);
+  }
+  return context.potBb || 2.5;
+}
+
+function renderRunoutModes() {
+  el.runoutModeButtons.innerHTML = runoutModes
+    .map(
+      (mode) => `
+        <button type="button" data-runout="${mode.id}" class="${state.runoutMode === mode.id ? "is-active" : ""}">
+          ${t(mode.labelKey)}
+        </button>
+      `,
+    )
+    .join("");
+
+  el.runoutModeButtons.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.runoutMode = button.dataset.runout;
+      state.runout = null;
+      render();
+    });
+  });
+}
+
 function renderRunoutBox(context, rec) {
+  updatePlayOutButtonText(context);
+
   if (!state.runout) {
-    const cue = context.board ? "Run the turn and river from this flop." : "Run one possible flop, turn, and river after your preflop decision.";
+    const cue = state.runoutMode === "showdown" ? t("runout.cueShowdown") : t("runout.cueStreet");
     el.runoutBox.innerHTML = `<p>${cue}</p>`;
     return;
   }
 
-  const turnText = state.runout.turn ? `${state.runout.turn.rank}${state.runout.turn.suit.symbol}` : "";
-  const riverText = state.runout.river ? `${state.runout.river.rank}${state.runout.river.suit.symbol}` : "";
   el.runoutBox.innerHTML = `
     <div class="runout-board">
-      <span>Flop ${boardText(state.runout.flop)}</span>
-      <span>Turn ${turnText}</span>
-      <span>River ${riverText}</span>
+      ${renderRunoutStreet("table.flop", state.runout.flop)}
+      ${state.runout.turn ? renderRunoutStreet("table.turn", [state.runout.turn]) : ""}
+      ${state.runout.river ? renderRunoutStreet("table.river", [state.runout.river]) : ""}
     </div>
-    <strong>${state.runout.outcome.title}</strong>
+    <strong>${runoutOutcomeTitle(state.runout.outcome)}</strong>
     ${state.runout.showdown ? renderShowdownSummary(state.runout.showdown) : ""}
-    <p>${state.runout.outcome.body} Current recommendation starts with ${rec.primary}${rec.secondary ? `, mixed with ${rec.secondary}` : ""}.</p>
+    ${state.runout.quiz ? renderStreetQuiz(state.runout.quiz) : ""}
+    ${renderRunoutAdvice(state.runout.advice)}
+    <p>${renderRunoutSummaryText(rec)}</p>
   `;
+  bindStreetQuizActions();
+}
+
+function renderRunoutSummaryText(rec) {
+  if (state.runout?.quiz) {
+    const quiz = state.runout.quiz;
+    return `${runoutOutcomeBody(state.runout.outcome)} ${
+      state.lang === "zh"
+        ? `这一街主线是 ${actionLabel(quiz.primary)}${quiz.secondary ? `，低频混合 ${actionLabel(quiz.secondary)}` : ""}。`
+        : `The street line starts with ${actionLabel(quiz.primary)}${quiz.secondary ? `, mixed with ${actionLabel(quiz.secondary)}` : ""}.`
+    }`;
+  }
+
+  return `${runoutOutcomeBody(state.runout.outcome)} ${
+    state.lang === "zh"
+      ? `翻前/当前建议从 ${actionLabel(rec.primary)} 开始${rec.secondary ? `，可混合 ${actionLabel(rec.secondary)}` : ""}。`
+      : `Current recommendation starts with ${actionLabel(rec.primary)}${rec.secondary ? `, mixed with ${actionLabel(rec.secondary)}` : ""}.`
+  }`;
+}
+
+function updatePlayOutButtonText(context) {
+  if (state.runout?.quiz && !state.runout.quiz.chosen) {
+    el.playOutHand.textContent = state.lang === "zh" ? "先选行动" : "Answer First";
+    return;
+  }
+
+  if (state.runout?.quiz?.chosen === "Fold") {
+    el.playOutHand.textContent = state.lang === "zh" ? "手牌结束" : "Hand Ends";
+    return;
+  }
+
+  if (state.runoutMode === "showdown") {
+    el.playOutHand.textContent = t("button.showdown");
+    return;
+  }
+
+  const visibleCount = state.runout?.board?.length || context.board?.length || 0;
+  if (visibleCount < 3) {
+    el.playOutHand.textContent = t("button.dealFlop");
+  } else if (visibleCount < 4) {
+    el.playOutHand.textContent = t("button.dealTurn");
+  } else if (visibleCount < 5) {
+    el.playOutHand.textContent = t("button.dealRiver");
+  } else {
+    el.playOutHand.textContent = t("button.showdown");
+  }
+}
+
+function renderRunoutStreet(labelKey, cards) {
+  if (!cards?.length) return "";
+  return `<span>${t(labelKey)} ${boardText(cards)}</span>`;
+}
+
+function buildStreetQuiz(context, rec, chosenAction, board, priorPotBb) {
+  const line = buildVillainStreetLine(context, chosenAction, board, priorPotBb);
+  const decision = recommendStreetDecision(board, line, rec);
+  return {
+    street: streetNameFromBoard(board),
+    line,
+    actions: line.action === "Bet" ? ["Fold", "Call", "Raise"] : ["Check", "Bet"],
+    chosen: null,
+    ...decision,
+  };
+}
+
+function buildVillainStreetLine(context, chosenAction, board, priorPotBb) {
+  const street = streetNameFromBoard(board);
+  const villainPosition = context.threeBettorPosition || context.openerPosition || pickShowdownVillain(context);
+  const texture = analyzeFlopHand(state.current.cards, board);
+  const score = scoreSevenCards([...state.current.cards, ...board]);
+  const streetCard = board[board.length - 1];
+  const scareCard = ["A", "K", "Q"].includes(streetCard?.rank);
+  const boardWet = texture.flushDraw || texture.openEnded || texture.gutshot || texture.boardPaired;
+  const heroLooksStrong = score.rank >= 2 || texture.monster || texture.topPairTopKicker;
+  const villainWasAggressor = Boolean(context.threeBettorPosition || context.openerPosition) && chosenAction !== "Raise";
+  let betFrequency = villainWasAggressor ? 58 : 36;
+
+  if (street === "flop" && context.spot === "flopVsCbet") betFrequency = 76;
+  if (scareCard) betFrequency += 10;
+  if (boardWet) betFrequency -= 8;
+  if (heroLooksStrong) betFrequency -= 12;
+  if (street === "river" && score.rank === 0) betFrequency += 8;
+
+  const willBet = Math.random() * 100 < Math.max(18, Math.min(82, betFrequency));
+  const potBeforeBb = roundBb(Math.max(1.5, priorPotBb || context.potBb || 2.5));
+
+  if (!willBet) {
+    return {
+      street,
+      villainPosition,
+      action: "Check",
+      potBeforeBb,
+      potAfterBb: potBeforeBb,
+      intent: heroLooksStrong ? "pot-control" : "range-check",
+    };
+  }
+
+  const sizeFraction = weightedChoice([
+    { value: 0.33, weight: street === "flop" ? 44 : 30 },
+    { value: 0.5, weight: 34 },
+    { value: 0.75, weight: street === "river" ? 28 : 18 },
+  ]);
+  const betBb = roundBb(Math.max(1, potBeforeBb * sizeFraction));
+  const intent = heroLooksStrong
+    ? "thin-value"
+    : scareCard || (street === "river" && score.rank === 0)
+      ? "bluff"
+      : "range-bet";
+
+  return {
+    street,
+    villainPosition,
+    action: "Bet",
+    betBb,
+    potBeforeBb,
+    potAfterBb: roundBb(potBeforeBb + betBb),
+    intent,
+  };
+}
+
+function recommendStreetDecision(board, line, rec) {
+  const texture = analyzeFlopHand(state.current.cards, board);
+  const score = scoreSevenCards([...state.current.cards, ...board]);
+  const river = board.length >= 5;
+  const betFraction = line.betBb ? line.betBb / Math.max(1, line.potBeforeBb) : 0;
+  let primary = "Check";
+  let secondary = "";
+  let primaryFreq = 100;
+
+  if (line.action === "Check") {
+    if (score.rank >= 2 || texture.monster || texture.overpair || texture.topPairTopKicker) {
+      primary = "Bet";
+      secondary = score.rank === 1 ? "Check" : "";
+      primaryFreq = secondary ? 72 : 100;
+    } else if (!river && (texture.flushDraw || texture.openEnded || texture.gutshot || texture.twoOvercards)) {
+      primary = "Bet";
+      secondary = "Check";
+      primaryFreq = texture.flushDraw || texture.openEnded ? 58 : 38;
+    } else {
+      primary = "Check";
+      primaryFreq = 100;
+    }
+  } else if (score.rank >= 3 || texture.monster || (!river && texture.comboDraw)) {
+    primary = "Raise";
+    secondary = "Call";
+    primaryFreq = score.rank >= 3 || texture.monster ? 64 : 46;
+  } else if (score.rank >= 1 || texture.topPair || texture.secondPair || texture.underPair) {
+    primary = betFraction <= 0.55 || texture.topPairTopKicker ? "Call" : "Fold";
+    secondary = primary === "Call" && betFraction >= 0.65 ? "Fold" : "";
+    primaryFreq = secondary ? 62 : 100;
+  } else if (!river && (texture.flushDraw || texture.openEnded || texture.gutshot || texture.twoOvercards)) {
+    primary = betFraction <= 0.65 ? "Call" : "Fold";
+    secondary = texture.comboDraw && primary === "Call" ? "Raise" : "";
+    primaryFreq = secondary ? 74 : 100;
+  } else {
+    primary = rec.primary === "Raise" && line.intent === "bluff" ? "Raise" : "Fold";
+    secondary = "";
+    primaryFreq = 100;
+  }
+
+  return {
+    primary,
+    secondary,
+    primaryFreq,
+    acceptedActions: [primary, secondary].filter(Boolean),
+    note: streetDecisionNote(primary, secondary, line, score, texture, river),
+  };
+}
+
+function streetDecisionNote(primary, secondary, line, score, texture, river) {
+  if (state.lang === "zh") {
+    if (primary === "Bet") return secondary ? "这里可以下注施压，也保留一部分过牌控池。听牌或中等强度牌不要自动打太大。" : "你的牌有足够价值或权益，应该主动下注拿价值/保护。";
+    if (primary === "Check") return river ? "到河牌没有足够价值下注，优先过牌摊牌或放弃诈唬。" : "这条街权益不够清楚，先过牌控制底池，等下一张牌再判断。";
+    if (primary === "Raise") return "你的牌足够强，或有强听牌，可以对下注加压。加注不是乱来，是用价值和 fold equity 一起赚钱。";
+    if (primary === "Call") return line.betBb && line.betBb / Math.max(1, line.potBeforeBb) > 0.6 ? "面对偏大下注可以跟，但频率要收紧；这里不是舒服跟，是按范围和赔率继续。" : "跟注能保留对手诈唬和差牌，避免把中等价值牌打得过大。";
+    return "这手牌面对下注没有足够摊牌价值或听牌权益，应该弃牌。";
+  }
+
+  if (primary === "Bet") return secondary ? "Bet this at frequency, while checking some medium-strength hands for pot control." : "You have enough value or equity to bet for value/protection.";
+  if (primary === "Check") return river ? "On the river this does not have enough value to bet; check and realize showdown or give up." : "Equity is not clear enough, so control the pot and reassess next street.";
+  if (primary === "Raise") return "This is strong enough, or has enough draw equity, to apply pressure versus the bet.";
+  if (primary === "Call") return "Calling keeps bluffs and worse hands in while avoiding overplaying medium value.";
+  return "This hand lacks enough showdown value or draw equity versus the bet.";
+}
+
+function renderStreetQuiz(quiz) {
+  const chosen = quiz.chosen;
+  const isCorrect = chosen && quiz.acceptedActions.includes(chosen);
+  const lineText = renderVillainLine(quiz.line);
+  const result = chosen
+    ? `<p class="street-result ${isCorrect ? "correct" : "miss"}">${isCorrect ? t("runout.correct") : t("runout.review")}: ${t("runout.correctLine")} ${actionLabel(quiz.primary)}${quiz.secondary ? ` / ${t("runout.mixedLine")} ${actionLabel(quiz.secondary)} ${100 - quiz.primaryFreq}%` : ""}.</p>`
+    : "";
+
+  return `
+    <div class="street-quiz">
+      <span>${t("runout.quizLabel")} · ${streetDisplayName(quiz.street)}</span>
+      <strong>${lineText}</strong>
+      <p>${t("runout.question")}</p>
+      <div class="street-actions">
+        ${quiz.actions
+          .map((action) => `<button type="button" data-street-action="${action}" class="${chosen === action ? "is-picked" : ""} ${quiz.acceptedActions.includes(action) ? "is-answer" : ""}">${actionLabel(action)}</button>`)
+          .join("")}
+      </div>
+      ${result}
+      ${chosen ? `<p>${quiz.note}</p>` : ""}
+    </div>
+  `;
+}
+
+function renderVillainLine(line) {
+  if (line.action === "Check") {
+    return state.lang === "zh"
+      ? `${line.villainPosition} ${actionLabel("Check")}，底池 ${formatBb(line.potBeforeBb)}`
+      : `${line.villainPosition} checks, pot ${formatBb(line.potBeforeBb)}`;
+  }
+
+  return state.lang === "zh"
+    ? `${line.villainPosition} ${actionLabel("Bet")} ${formatBb(line.betBb)} / 底池 ${formatBb(line.potBeforeBb)}`
+    : `${line.villainPosition} bets ${formatBb(line.betBb)} into ${formatBb(line.potBeforeBb)}`;
+}
+
+function bindStreetQuizActions() {
+  el.runoutBox.querySelectorAll("[data-street-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!state.runout?.quiz) return;
+      state.runout.quiz.chosen = button.dataset.streetAction;
+      render();
+    });
+  });
+}
+
+function streetNameFromBoard(board) {
+  if (board.length >= 5) return "river";
+  if (board.length >= 4) return "turn";
+  return "flop";
+}
+
+function streetDisplayName(street) {
+  return {
+    flop: t("table.flop"),
+    turn: t("table.turn"),
+    river: t("table.river"),
+  }[street] || street;
+}
+
+function buildRunoutAdvice(context, rec, chosenAction, board, outcome, showdown, quiz = null) {
+  if (showdown) {
+    return {
+      tone: "showdown",
+      title: state.lang === "zh" ? "复盘全下前的决定" : "Review the all-in decision",
+      body: t("runout.noMoreAction"),
+    };
+  }
+
+  if (chosenAction === "Fold") {
+    return {
+      tone: "fold",
+      title: actionLabel("Fold"),
+      body: t("runout.foldedAdvice"),
+    };
+  }
+
+  if (quiz && !quiz.chosen) {
+    return {
+      tone: "draw",
+      title: t("runout.villainLine"),
+      body: quiz.line.action === "Bet"
+        ? (state.lang === "zh"
+            ? `对手这条街下注 ${formatBb(quiz.line.betBb)}，可能是 ${villainIntentText(quiz.line.intent)}。先按底池赔率、牌力和 blocker 做决定。`
+            : `Villain bets ${formatBb(quiz.line.betBb)} here, often as ${villainIntentText(quiz.line.intent)}. Decide by price, hand class, and blockers.`)
+        : t("runout.checkedToHero"),
+    };
+  }
+
+  const score = scoreSevenCards([...state.current.cards, ...board]);
+  const streetDone = board.length >= 5;
+  const texture = board.length >= 3 ? analyzeFlopHand(state.current.cards, board) : {};
+
+  if (score.rank >= 4 || texture.monster) {
+    return {
+      tone: "value",
+      title: state.lang === "zh" ? "价值下注 / 可以跟全下" : "Value bet / call off",
+      body: state.lang === "zh"
+        ? "你现在是很强的成牌。真实局里优先下注拿价值，被加注时通常继续，不要因为怕牌面就过度慢打。"
+        : "You now have a very strong made hand. In practice, bet for value and continue versus most raises instead of over-slowplaying.",
+    };
+  }
+
+  if (score.rank >= 2 || texture.topPairTopKicker || texture.overpair) {
+    return {
+      tone: "value",
+      title: state.lang === "zh" ? "下注拿价值，小心大压力" : "Bet for value, respect big pressure",
+      body: state.lang === "zh"
+        ? "两对、超对或强顶对可以继续拿价值。面对小下注可以跟，面对大额全下要重新看对手范围和 SPR。"
+        : "Two pair, overpairs, and strong top pair can keep taking value. Call smaller bets, but re-check ranges and SPR versus a large shove.",
+    };
+  }
+
+  if (score.rank === 1 || texture.topPair || texture.secondPair || texture.underPair) {
+    return {
+      tone: "control",
+      title: state.lang === "zh" ? "控池：过牌/跟小注" : "Pot control: check/call small",
+      body: state.lang === "zh"
+        ? "一对牌通常不是自动打光。可以跟合理小注，面对大尺码压力要愿意弃牌。"
+        : "One-pair hands are not automatic stack-offs. Continue versus reasonable small bets, but be ready to fold to heavy pressure.",
+    };
+  }
+
+  if (!streetDone && (texture.flushDraw || texture.openEnded || texture.gutshot || texture.twoOvercards || texture.lightContinue)) {
+    return {
+      tone: "draw",
+      title: state.lang === "zh" ? "看赔率继续，部分半诈唬" : "Continue by price, mix semi-bluffs",
+      body: state.lang === "zh"
+        ? "你有听牌或高张权益。跟注要看底池赔率；有 fold equity 和好 blocker 时可以混合加注。"
+        : "You have draw or overcard equity. Call when the price is right; mix raises when fold equity and blockers are good.",
+    };
+  }
+
+  return {
+    tone: "fold",
+    title: state.lang === "zh" ? "过牌/弃牌，少做无权益诈唬" : "Check/fold, avoid low-equity bluffs",
+    body: state.lang === "zh"
+      ? "这条 runout 没有给你足够摊牌价值或听牌。真实局里多选择放弃，只在 blocker 很好时低频诈唬。"
+      : "This runout did not give enough showdown or draw value. In real play, give up often and bluff only at low frequency with good blockers.",
+  };
+}
+
+function villainIntentText(intent) {
+  if (state.lang === "zh") {
+    return {
+      bluff: "诈唬压力",
+      "thin-value": "薄价值下注",
+      "range-bet": "范围下注",
+      "pot-control": "控池",
+      "range-check": "范围过牌",
+    }[intent] || "混合线路";
+  }
+
+  return {
+    bluff: "bluff pressure",
+    "thin-value": "thin value",
+    "range-bet": "a range bet",
+    "pot-control": "pot control",
+    "range-check": "a range check",
+  }[intent] || "a mixed line";
+}
+
+function renderRunoutAdvice(advice) {
+  if (!advice) return "";
+  return `
+    <div class="next-advice ${advice.tone}">
+      <span>${t("runout.adviceLabel")}</span>
+      <strong>${advice.title}</strong>
+      <p>${advice.body}</p>
+    </div>
+  `;
+}
+
+function runoutOutcomeTitle(outcome) {
+  if (state.lang !== "zh") return outcome.title;
+  return {
+    "Strong runout": "强牌 runout",
+    "Showdown path": "可以摊牌的路径",
+    "Equity but not made": "有权益但未成牌",
+    "Give-up branch": "放弃分支",
+  }[outcome.title] || outcome.title;
+}
+
+function runoutOutcomeBody(outcome) {
+  if (state.lang !== "zh") return outcome.body;
+  return {
+    "Strong runout": "你的牌在这个牌面提升成强成牌。复盘重点是怎样下注拿价值，以及不要过度慢打。",
+    "Showdown path": "你有一对或类似摊牌价值，但下注尺度很关键。这类牌常常是控池继续，而不是自动打光。",
+    "Equity but not made": "这条 runout 给你一些权益或高张价值，但不是干净成牌。重点看底池赔率和未来 fold equity。",
+    "Give-up branch": "这条 runout 没帮到足够多。实战里通常过牌摊牌、面对压力弃牌，或只用好 blocker 做低频诈唬。",
+  }[outcome.title] || outcome.body;
+}
+
+function localizedRecNote(rec, context) {
+  if (state.lang !== "zh") return rec.note;
+  if (rec.primary === "Fold") {
+    return "这手牌低于当前局面的继续范围。现实训练里要先守住位置、筹码深度和底池赔率，不要因为牌面好看就硬跟。";
+  }
+  if (rec.primary === "Jam") {
+    return "短筹时全下能最大化 fold equity，也避免翻后 SPR 太尴尬。只要这手牌在全下范围里，就直接施压。";
+  }
+  if (rec.primary === "Call") {
+    return context?.spot === "flopVsCbet"
+      ? "这手牌有足够摊牌价值或听牌权益。跟注可以保留对手弱牌，同时避免把中等强度牌打得太大。"
+      : "这手牌有足够原始权益和实现率，可以跟注继续。筹码更浅时才更偏向全下。";
+  }
+  if (rec.primary === "Raise" || rec.primary === "3-bet" || rec.primary === "4-bet") {
+    return "这手牌适合主动施压。加注能拿主动权、隔离范围，并让对手的边缘牌付出代价。";
+  }
+  return rec.note;
+}
+
+function boardLabelText(label) {
+  if (label === "Flop") return t("table.flop");
+  if (label === "Turn") return t("table.turn");
+  if (label === "River") return t("table.river");
+  return label;
 }
 
 function shouldOpenShowdown(action, rec) {
@@ -785,15 +1646,37 @@ function buildShowdownResult(context, villainPosition, villainCards, board) {
   };
 }
 
+function showdownResultText(showdown) {
+  if (state.lang !== "zh") return showdown.resultText;
+  if (showdown.winner === "hero") return "Hero 赢下";
+  if (showdown.winner === "villain") return `${showdown.villainPosition} 赢下`;
+  return t("table.chopPot");
+}
+
 function renderShowdownSummary(showdown) {
   const villainCards = showdown.villainCards.map((card) => `${card.rank}${card.suit.symbol}`).join(" ");
   return `
     <div class="showdown-summary">
-      <span>All-in showdown</span>
-      <strong>${showdown.resultText} · ${formatBb(showdown.potBb)}</strong>
-      <p>Hero ${showdown.heroHandName}; ${showdown.villainPosition} shows ${villainCards} for ${showdown.villainHandName}.</p>
+      <span>${t("runout.showdownLabel")}</span>
+      <strong>${showdownResultText(showdown)} · ${formatBb(showdown.potBb)}</strong>
+      <p>${state.lang === "zh" ? `Hero ${handNameText(showdown.heroHandName)}；${showdown.villainPosition} 摊出 ${villainCards}，牌型是 ${handNameText(showdown.villainHandName)}。` : `Hero ${showdown.heroHandName}; ${showdown.villainPosition} shows ${villainCards} for ${showdown.villainHandName}.`}</p>
     </div>
   `;
+}
+
+function handNameText(name) {
+  if (state.lang !== "zh") return name;
+  return {
+    "straight flush": "同花顺",
+    "four of a kind": "四条",
+    "full house": "葫芦",
+    flush: "同花",
+    straight: "顺子",
+    "three of a kind": "三条",
+    "two pair": "两对",
+    "one pair": "一对",
+    "high card": "高牌",
+  }[name] || name;
 }
 
 function cardsFromKeyExcluding(key, excludedCards) {
@@ -920,7 +1803,7 @@ function renderBars(profile) {
     .map(
       (item) => `
         <div class="bar-row">
-          <span>${item.action}</span>
+          <span>${actionLabel(item.action)}</span>
           <div class="bar-track"><div class="bar-fill ${actionClass(item.action)} ${item.mix ? "mix" : ""}" style="--value:${item.freq}%"></div></div>
           <span>${item.freq}%</span>
         </div>
@@ -942,13 +1825,13 @@ function hiddenProfile(actions) {
 function renderRange() {
   const spot = spotById(state.spot);
   const context = state.context || buildSpotContext(state.position, state.spot, state.tableSize, state.stackBb, state.current);
-  el.rangeContext.textContent = `${tableConfigs[state.tableSize].label} / ${state.stackBb}BB / ${state.position} / ${spot.label}`;
+  el.rangeContext.textContent = `${tableConfigs[state.tableSize].label} / ${state.stackBb}BB / ${state.position} / ${spotLabel(spot.id)}`;
   el.rangeMatrix.innerHTML = allHands
     .map((hand) => {
       const rec = recommend(hand.key, state.position, state.spot, state.tableSize, state.stackBb, context);
       const className = cellClass(rec);
       const selected = hand.key === state.selectedKey ? " is-selected" : "";
-      return `<button type="button" class="${className}${selected}" data-hand="${hand.key}" aria-label="${hand.key} ${rec.primary}">${hand.key}</button>`;
+      return `<button type="button" class="${className}${selected}" data-hand="${hand.key}" aria-label="${hand.key} ${actionLabel(rec.primary)}">${hand.key}</button>`;
     })
     .join("");
   el.rangeMatrix.querySelectorAll("button").forEach((button) => {
@@ -973,8 +1856,8 @@ function renderSelectedHand() {
     <strong>${state.selectedKey}</strong>
     <span>${tableConfigs[state.tableSize].label} · ${state.stackBb}BB · ${state.position}</span>
     <span>${context.summary}</span>
-    ${context.board ? `<span>Board ${boardText(context.board)}</span>` : ""}
-    <p>${rec.primary}${rec.secondary ? `, mix ${rec.secondary}` : ""}. ${rec.note}</p>
+    ${context.board ? `<span>${t("table.board")} ${boardText(context.board)}</span>` : ""}
+    <p>${actionLabel(rec.primary)}${rec.secondary ? `, ${t("line.mix")} ${actionLabel(rec.secondary)}` : ""}. ${localizedRecNote(rec, context)}</p>
   `;
 }
 
@@ -996,12 +1879,12 @@ function renderOdds() {
 
   el.oddsDecision.classList.remove("warning", "bad");
   if (edge >= 0.06) {
-    el.oddsDecision.textContent = "Good call";
+    el.oddsDecision.textContent = t("odds.good");
   } else if (edge >= 0) {
-    el.oddsDecision.textContent = "Thin call";
+    el.oddsDecision.textContent = t("odds.thin");
     el.oddsDecision.classList.add("warning");
   } else {
-    el.oddsDecision.textContent = "Not enough equity";
+    el.oddsDecision.textContent = t("odds.bad");
     el.oddsDecision.classList.add("bad");
   }
 }
@@ -1011,12 +1894,36 @@ function renderNotes() {
     .map(
       (note) => `
         <article>
-          <h2>${note.title}</h2>
-          <p>${note.body}</p>
+          <h2>${noteTitle(note)}</h2>
+          <p>${noteBody(note)}</p>
         </article>
       `,
     )
     .join("");
+}
+
+function noteTitle(note) {
+  if (state.lang !== "zh") return note.title;
+  return {
+    "Short-stack reality": "短筹现实",
+    "Late-position steals": "后位偷盲",
+    "Flat less when shallow": "短筹少平跟",
+    "8-max starts tighter": "8人桌前位更紧",
+    "Use the matrix": "用矩阵看频率",
+    "Why no call": "为什么没有 Call",
+  }[note.title] || note.title;
+}
+
+function noteBody(note) {
+  if (state.lang !== "zh") return note.body;
+  return {
+    "Short-stack reality": "5BB 到 15BB 很多锦标赛局面会变成全下为主。正确答案常常来自 fold equity 和保留筹码，而不是手牌看起来漂不漂亮。",
+    "Late-position steals": "12BB 到 25BB 时，CO、BTN、SB 的压力价值更高。深筹弃牌的手，在有 ante 和奖金压力时可能变成可开池或可全下。",
+    "Flat less when shallow": "筹码越短，弱平跟越容易亏。面对加注时，通常要更清楚地区分弃牌、可实现权益的跟注，以及用全下施压。",
+    "8-max starts tighter": "身后人更多，前位开池必须更紧。8人桌前位范围明显不能按6人桌后位来打。",
+    "Use the matrix": "如果一手牌在两个动作之间混合，就当成频率题来看。矩阵能帮你区分纯继续、纯弃牌和混合频率。",
+    "Why no call": "无人入池开池时没有 Call，因为没人先下注。面对 open、3-bet 或翻牌 c-bet 时，Call 会出现。",
+  }[note.title] || note.body;
 }
 
 function renderScore() {
@@ -1663,13 +2570,13 @@ function describeSeat(position, context) {
   if (showdown) {
     if (position === state.position) {
       const won = showdown.winner === "hero";
-      const status = showdown.winner === "chop" ? "Chop pot" : won ? `Won ${formatBb(showdown.potBb)}` : "All-in";
+      const status = showdown.winner === "chop" ? t("table.chopPot") : won ? `${t("table.won")} ${formatBb(showdown.potBb)}` : t("table.allIn");
       return { status, tone: won ? "hero winner" : "hero", betBb: showdown.allInBb };
     }
 
     if (position === showdown.villainPosition) {
       const won = showdown.winner === "villain";
-      const status = showdown.winner === "chop" ? "Chop pot" : won ? `Won ${formatBb(showdown.potBb)}` : "All-in call";
+      const status = showdown.winner === "chop" ? t("table.chopPot") : won ? `${t("table.won")} ${formatBb(showdown.potBb)}` : t("table.allInCall");
       return {
         status,
         tone: won ? "aggressor winner" : "aggressor",
@@ -1680,30 +2587,62 @@ function describeSeat(position, context) {
     }
 
     if (posted > 0) {
-      return { status: "Folded", tone: "folded", folded: true, betBb: posted };
+      return { status: t("table.folded"), tone: "folded", folded: true, betBb: posted };
     }
 
-    return { status: "Folded", tone: "folded", folded: true };
+    return { status: t("table.folded"), tone: "folded", folded: true };
+  }
+
+  const streetQuiz = state.runout?.quiz || null;
+  if (streetQuiz) {
+    if (position === state.position) {
+      const chosen = streetQuiz.chosen;
+      const committed = chosen && streetQuiz.line.action === "Bet" && ["Call", "Raise"].includes(chosen);
+      const heroBet = chosen === "Raise" ? roundBb(streetQuiz.line.betBb * 2.6) : committed ? streetQuiz.line.betBb : 0;
+      return {
+        status: chosen ? actionLabel(chosen) : t("table.heroToAct"),
+        tone: "hero",
+        betBb: heroBet,
+      };
+    }
+
+    if (position === streetQuiz.line.villainPosition) {
+      const status = streetQuiz.line.action === "Bet"
+        ? `${t("table.bet")} ${formatBb(streetQuiz.line.betBb)}`
+        : actionLabel("Check");
+      return {
+        status,
+        tone: streetQuiz.line.action === "Bet" ? "aggressor" : "idle",
+        showCards: true,
+        betBb: streetQuiz.line.action === "Bet" ? streetQuiz.line.betBb : 0,
+      };
+    }
+
+    if (posted > 0) {
+      return { status: t("table.folded"), tone: "folded", folded: true, betBb: posted };
+    }
+
+    return { status: t("table.folded"), tone: "folded", folded: true };
   }
 
   if (position === state.position) {
-    if (context.spot === "vs3bet") return { status: `Opened ${formatBb(context.openSize)}`, tone: "hero", betBb: context.openSize };
-    if (context.spot === "flopVsCbet") return { status: "Hero to act", tone: "hero" };
-    return { status: "Hero to act", tone: "hero", betBb: posted || 0 };
+    if (context.spot === "vs3bet") return { status: `${t("table.opened")} ${formatBb(context.openSize)}`, tone: "hero", betBb: context.openSize };
+    if (context.spot === "flopVsCbet") return { status: t("table.heroToAct"), tone: "hero" };
+    return { status: t("table.heroToAct"), tone: "hero", betBb: posted || 0 };
   }
 
   if (context.spot === "open") {
     if (actedBeforeHero && posted === 0) {
-      return { status: "Folded", tone: "folded", folded: true };
+      return { status: t("table.folded"), tone: "folded", folded: true };
     }
     if (posted > 0) {
-      return { status: `${position} blind`, tone: "blind", showCards: true, betBb: posted };
+      return { status: `${position} ${t("table.blind")}`, tone: "blind", showCards: true, betBb: posted };
     }
-    return { status: "Still in", tone: "idle", showCards: true };
+    return { status: t("table.stillIn"), tone: "idle", showCards: true };
   }
 
   if (context.spot === "vsRaise" && position === context.openerPosition) {
-    return { status: `Open ${formatBb(context.openSize)}`, tone: "aggressor", showCards: true, betBb: context.openSize };
+    return { status: `${t("table.open")} ${formatBb(context.openSize)}`, tone: "aggressor", showCards: true, betBb: context.openSize };
   }
 
   if (context.spot === "vs3bet" && position === context.threeBettorPosition) {
@@ -1711,14 +2650,14 @@ function describeSeat(position, context) {
   }
 
   if (context.spot === "flopVsCbet" && position === context.openerPosition) {
-    return { status: `Bet ${formatBb(context.betSize)}`, tone: "aggressor", showCards: true, betBb: context.betSize };
+    return { status: `${t("table.bet")} ${formatBb(context.betSize)}`, tone: "aggressor", showCards: true, betBb: context.betSize };
   }
 
   if (posted > 0) {
-    return { status: "Folded", tone: "folded", folded: true, betBb: posted };
+    return { status: t("table.folded"), tone: "folded", folded: true, betBb: posted };
   }
 
-  return { status: "Folded", tone: "folded", folded: true };
+  return { status: t("table.folded"), tone: "folded", folded: true };
 }
 
 function renderCardBack() {
@@ -2048,12 +2987,27 @@ function buildContextStrip(context) {
     .map(
       (line) => `
         <div class="context-chip">
-          <span>${line.label}</span>
+          <span>${contextLineLabel(line.label)}</span>
           <strong>${line.value}</strong>
         </div>
       `,
     )
     .join("");
+}
+
+function contextLineLabel(label) {
+  if (state.lang !== "zh") return label;
+  return {
+    Pot: "底池",
+    Action: "行动",
+    "After open": "开池后",
+    Open: "开池",
+    "To call": "跟注",
+    Preflop: "翻前",
+    Flop: "翻牌",
+    Bet: "下注",
+    "3-bet": "3-bet",
+  }[label] || label;
 }
 
 function spotById(spotId) {
@@ -2247,6 +3201,8 @@ function actionClass(action) {
     Raise: "raise",
     Call: "call",
     Fold: "fold",
+    Check: "check",
+    Bet: "raise",
     "3-bet": "threebet",
     "4-bet": "threebet",
   }[action] || action.toLowerCase();

@@ -16,34 +16,40 @@
             <h1>Poker Solver Lab</h1>
           </div>
         </div>
-        <nav class="tabs" aria-label="Primary views">
-          <button class="tab is-active" type="button" data-view="trainer">Trainer</button>
-          <button class="tab" type="button" data-view="range">Range</button>
-          <button class="tab" type="button" data-view="odds">Odds</button>
-          <button class="tab" type="button" data-view="notes">Notes</button>
-          <button class="tab" type="button" data-view="comments">Comments</button>
-        </nav>
+        <div class="top-actions">
+          <div class="language-toggle" id="languageButtons" aria-label="Language">
+            <button type="button" data-lang="en">EN</button>
+            <button type="button" data-lang="zh">中文</button>
+          </div>
+          <nav class="tabs" aria-label="Primary views">
+            <button class="tab is-active" type="button" data-view="trainer" data-i18n="nav.trainer">Trainer</button>
+            <button class="tab" type="button" data-view="range" data-i18n="nav.range">Range</button>
+            <button class="tab" type="button" data-view="odds" data-i18n="nav.odds">Odds</button>
+            <button class="tab" type="button" data-view="notes" data-i18n="nav.notes">Notes</button>
+            <button class="tab" type="button" data-view="comments" data-i18n="nav.comments">Comments</button>
+          </nav>
+        </div>
       </header>
 
       <main class="workspace">
         <aside class="control-rail" aria-label="Training controls">
           <section class="rail-section">
-            <span class="section-label">Table</span>
+            <span class="section-label" data-i18n="label.table">Table</span>
             <div class="segmented compact two-up" id="tableSizeButtons"></div>
           </section>
 
           <section class="rail-section">
-            <span class="section-label">Mode</span>
+            <span class="section-label" data-i18n="label.mode">Mode</span>
             <div class="segmented stacked" id="gameModeButtons"></div>
           </section>
 
           <section class="rail-section">
-            <span class="section-label">Felt</span>
+            <span class="section-label" data-i18n="label.felt">Felt</span>
             <div class="theme-grid" id="themeButtons"></div>
           </section>
 
           <section class="rail-section">
-            <span class="section-label">Hero Stack</span>
+            <span class="section-label" data-i18n="label.heroStack">Hero Stack</span>
             <div class="stack-control">
               <input id="stackSize" type="range" min="5" max="80" value="25" />
               <div class="stack-readout">
@@ -55,56 +61,56 @@
           </section>
 
           <section class="rail-section">
-            <span class="section-label">Position</span>
+            <span class="section-label" data-i18n="label.position">Position</span>
             <div class="segmented compact four-up" id="positionButtons"></div>
           </section>
 
           <section class="rail-section">
-            <span class="section-label">Spot</span>
+            <span class="section-label" data-i18n="label.spot">Spot</span>
             <div class="segmented stacked" id="spotButtons"></div>
           </section>
 
           <section class="rail-section">
-            <span class="section-label">Hand</span>
+            <span class="section-label" data-i18n="label.hand">Hand</span>
             <div class="hand-picker">
               <label>
-                High card
+                <span data-i18n="label.highCard">High card</span>
                 <select id="rankOne"></select>
               </label>
               <label>
-                Low card
+                <span data-i18n="label.lowCard">Low card</span>
                 <select id="rankTwo"></select>
               </label>
               <label>
-                Shape
+                <span data-i18n="label.shape">Shape</span>
                 <select id="suitedness">
                   <option value="s">Suited</option>
                   <option value="o">Offsuit</option>
                 </select>
               </label>
             </div>
-            <button class="ghost-button" type="button" id="usePickedHand">Use This Hand</button>
+            <button class="ghost-button" type="button" id="usePickedHand" data-i18n="button.useHand">Use This Hand</button>
           </section>
 
           <section class="rail-section">
-            <span class="section-label">Question Mix</span>
+            <span class="section-label" data-i18n="label.questionMix">Question Mix</span>
             <div class="tool-row">
-              <button class="ghost-button strong" type="button" id="randomSpot">Random Spot</button>
-              <button class="ghost-button" type="button" id="sameContextHand">New Hand Same Spot</button>
+              <button class="ghost-button strong" type="button" id="randomSpot" data-i18n="button.randomSpot">Random Spot</button>
+              <button class="ghost-button" type="button" id="sameContextHand" data-i18n="button.sameSpot">New Hand Same Spot</button>
             </div>
           </section>
 
           <section class="score-card" aria-label="Training results">
             <div>
-              <span>Accuracy</span>
+              <span data-i18n="score.accuracy">Accuracy</span>
               <strong id="accuracy">0%</strong>
             </div>
             <div>
-              <span>Streak</span>
+              <span data-i18n="score.streak">Streak</span>
               <strong id="streak">0</strong>
             </div>
             <div>
-              <span>Hands</span>
+              <span data-i18n="score.hands">Hands</span>
               <strong id="handsPlayed">0</strong>
             </div>
           </section>
@@ -138,16 +144,17 @@
 
             <section class="solver-panel">
               <div class="panel-heading">
-                <span class="section-label">Solver Line</span>
-                <button class="icon-button" type="button" id="nextHand" aria-label="Random MTT spot">Shuffle</button>
+                <span class="section-label" data-i18n="panel.solverLine">Solver Line</span>
+                <button class="icon-button" type="button" id="nextHand" aria-label="Random MTT spot" data-i18n="button.shuffle">Shuffle</button>
               </div>
               <div class="result-box" id="resultBox">
-                <p>Choose an action, then compare it with the tournament recommendation.</p>
+                <p data-i18n="result.waiting">Choose an action, then compare it with the tournament recommendation.</p>
               </div>
               <div class="frequency-bars" id="frequencyBars"></div>
               <div class="explain-box" id="explainBox"></div>
+              <div class="runout-mode" id="runoutModeButtons" aria-label="Runout mode"></div>
               <div class="runout-actions">
-                <button class="ghost-button strong" type="button" id="playOutHand">Play It Out</button>
+                <button class="ghost-button strong" type="button" id="playOutHand" data-i18n="button.playOut">Play It Out</button>
               </div>
               <div class="runout-box" id="runoutBox"></div>
             </section>
@@ -158,21 +165,21 @@
           <div class="range-layout">
             <section class="matrix-panel">
               <div class="panel-heading">
-                <span class="section-label">169-Hand Matrix</span>
+                <span class="section-label" data-i18n="panel.matrix">169-Hand Matrix</span>
                 <span class="pill" id="rangeContext">8-max / 25BB / HJ / Open</span>
               </div>
               <div class="matrix" id="rangeMatrix"></div>
             </section>
             <section class="range-detail">
-              <span class="section-label">Current Combo</span>
+              <span class="section-label" data-i18n="panel.currentCombo">Current Combo</span>
               <div class="selected-hand" id="selectedHandDetail"></div>
               <div class="legend">
-                <span><i class="legend-swatch jam"></i> Jam</span>
-                <span><i class="legend-swatch raise"></i> Raise</span>
-                <span><i class="legend-swatch threebet"></i> 3-bet / 4-bet</span>
-                <span><i class="legend-swatch call"></i> Call</span>
-                <span><i class="legend-swatch mix"></i> Mixed</span>
-                <span><i class="legend-swatch fold"></i> Fold</span>
+                <span><i class="legend-swatch jam"></i><span data-i18n="action.jam">Jam</span></span>
+                <span><i class="legend-swatch raise"></i><span data-i18n="action.raise">Raise</span></span>
+                <span><i class="legend-swatch threebet"></i><span data-i18n="action.threebet">3-bet / 4-bet</span></span>
+                <span><i class="legend-swatch call"></i><span data-i18n="action.call">Call</span></span>
+                <span><i class="legend-swatch mix"></i><span data-i18n="action.mixed">Mixed</span></span>
+                <span><i class="legend-swatch fold"></i><span data-i18n="action.fold">Fold</span></span>
               </div>
             </section>
           </div>
@@ -182,36 +189,36 @@
           <div class="odds-layout">
             <section class="odds-lab">
               <div class="panel-heading">
-                <span class="section-label">Pot Odds Lab</span>
-                <span class="pill">Rule of 2 / 4</span>
+                <span class="section-label" data-i18n="panel.oddsLab">Pot Odds Lab</span>
+                <span class="pill" data-i18n="panel.rule24">Rule of 2 / 4</span>
               </div>
               <div class="slider-row">
-                <label for="potSize">Pot size</label>
+                <label for="potSize" data-i18n="label.potSize">Pot size</label>
                 <input id="potSize" type="range" min="10" max="300" value="80" />
                 <output id="potSizeValue">80BB</output>
               </div>
               <div class="slider-row">
-                <label for="callSize">Call size</label>
+                <label for="callSize" data-i18n="label.callSize">Call size</label>
                 <input id="callSize" type="range" min="5" max="120" value="30" />
                 <output id="callSizeValue">30BB</output>
               </div>
               <div class="slider-row">
-                <label for="outs">Clean outs</label>
+                <label for="outs" data-i18n="label.cleanOuts">Clean outs</label>
                 <input id="outs" type="range" min="0" max="21" value="9" />
                 <output id="outsValue">9</output>
               </div>
               <div class="toggle-row" role="group" aria-label="Streets left">
-                <button type="button" class="toggle is-active" data-street="two">Turn + River</button>
-                <button type="button" class="toggle" data-street="one">One card</button>
+                <button type="button" class="toggle is-active" data-street="two" data-i18n="button.turnRiver">Turn + River</button>
+                <button type="button" class="toggle" data-street="one" data-i18n="button.oneCard">One card</button>
               </div>
             </section>
             <section class="odds-output">
               <div class="metric">
-                <span>Break-even equity</span>
+                <span data-i18n="metric.breakEven">Break-even equity</span>
                 <strong id="breakEven">27.3%</strong>
               </div>
               <div class="metric">
-                <span>Estimated equity</span>
+                <span data-i18n="metric.equity">Estimated equity</span>
                 <strong id="equity">36.0%</strong>
               </div>
               <div class="call-meter">
@@ -229,12 +236,14 @@
         <section class="view" id="commentsView" aria-label="Comments">
           <section class="feedback-panel">
             <div class="panel-heading">
-              <span class="section-label">Feedback Wall</span>
-              <span class="pill">Saved in GitHub</span>
+              <span class="section-label" data-i18n="panel.feedback">Feedback Wall</span>
+              <span class="pill" data-i18n="panel.savedGithub">Saved in GitHub</span>
             </div>
             <p class="feedback-note">
-              People can leave comments here with a GitHub login. If the inline thread does not load,
-              use the GitHub buttons and you can read everything later in the repo.
+              <span data-i18n="comments.note">
+                People can leave comments here with a GitHub login. If the inline thread does not load,
+                use the GitHub buttons and you can read everything later in the repo.
+              </span>
             </p>
             <div class="feedback-actions">
               <a
@@ -243,7 +252,7 @@
                 target="_blank"
                 rel="noreferrer"
               >
-                Leave Feedback
+                <span data-i18n="button.leaveFeedback">Leave Feedback</span>
               </a>
               <a
                 class="feedback-link secondary"
@@ -251,7 +260,7 @@
                 target="_blank"
                 rel="noreferrer"
               >
-                Read Saved Comments
+                <span data-i18n="button.readComments">Read Saved Comments</span>
               </a>
             </div>
             <div class="comment-shell" id="commentsEmbed"></div>
