@@ -130,6 +130,7 @@ const i18n = {
     "button.oneCard": "One card",
     "button.leaveFeedback": "Leave Feedback",
     "button.readComments": "Read Saved Comments",
+    "button.trainingSettings": "Training Settings",
     "score.accuracy": "Accuracy",
     "score.streak": "Streak",
     "score.hands": "Hands",
@@ -243,6 +244,7 @@ const i18n = {
     "button.oneCard": "一张牌",
     "button.leaveFeedback": "留下反馈",
     "button.readComments": "查看留言",
+    "button.trainingSettings": "训练设置",
     "score.accuracy": "准确率",
     "score.streak": "连对",
     "score.hands": "手数",
@@ -501,6 +503,8 @@ const el = {
   brandContext: document.querySelector("#brandContext"),
   felt: document.querySelector(".felt"),
   languageButtons: document.querySelector("#languageButtons"),
+  controlRail: document.querySelector(".control-rail"),
+  mobileSettingsToggle: document.querySelector("#mobileSettingsToggle"),
   tableSizeButtons: document.querySelector("#tableSizeButtons"),
   gameModeButtons: document.querySelector("#gameModeButtons"),
   themeButtons: document.querySelector("#themeButtons"),
@@ -601,6 +605,11 @@ function bindEvents() {
       localStorage.setItem("pokerSolverLang", state.lang);
       render();
     });
+  });
+
+  el.mobileSettingsToggle.addEventListener("click", () => {
+    const collapsed = el.controlRail.classList.toggle("is-collapsed");
+    el.mobileSettingsToggle.setAttribute("aria-expanded", String(!collapsed));
   });
 
   document.querySelectorAll(".tab").forEach((button) => {

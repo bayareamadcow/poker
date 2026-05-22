@@ -32,7 +32,11 @@
       </header>
 
       <main class="workspace">
-        <aside class="control-rail" aria-label="Training controls">
+        <aside class="control-rail is-collapsed" aria-label="Training controls">
+          <button class="mobile-settings-toggle" type="button" id="mobileSettingsToggle" aria-expanded="false" data-i18n="button.trainingSettings">
+            Training Settings
+          </button>
+          <div class="rail-content" id="railContent">
           <section class="rail-section">
             <span class="section-label" data-i18n="label.table">Table</span>
             <div class="segmented compact two-up" id="tableSizeButtons"></div>
@@ -114,6 +118,7 @@
               <strong id="handsPlayed">0</strong>
             </div>
           </section>
+          </div>
         </aside>
 
         <section class="view is-active" id="trainerView" aria-label="Trainer">

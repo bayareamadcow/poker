@@ -198,6 +198,14 @@ h1 {
   padding: 16px;
 }
 
+.rail-content {
+  display: block;
+}
+
+.mobile-settings-toggle {
+  display: none;
+}
+
 .rail-section + .rail-section,
 .score-card {
   margin-top: 18px;
@@ -1561,13 +1569,17 @@ output {
   }
 
   .control-rail {
+    display: block;
+  }
+
+  .rail-content {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
   }
 
-  .rail-section + .rail-section,
-  .score-card {
+  .rail-content .rail-section + .rail-section,
+  .rail-content .score-card {
     margin-top: 0;
   }
 
@@ -1617,15 +1629,60 @@ output {
 
   .control-rail {
     order: 2;
+    width: 100%;
+    padding: 10px;
   }
 
   .table-zone {
     padding: 8px;
   }
 
-  .control-rail,
+  .rail-content,
   .notes-grid {
     grid-template-columns: 1fr;
+  }
+
+  .mobile-settings-toggle {
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface-strong);
+    color: var(--ink);
+    padding: 0 14px;
+    font-weight: 900;
+  }
+
+  .mobile-settings-toggle::after {
+    content: "+";
+    display: grid;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--mint);
+    color: var(--green-deep);
+    font-size: 1rem;
+  }
+
+  .control-rail:not(.is-collapsed) .mobile-settings-toggle::after {
+    content: "-";
+  }
+
+  .control-rail.is-collapsed {
+    box-shadow: none;
+  }
+
+  .control-rail.is-collapsed .rail-content {
+    display: none;
+  }
+
+  .rail-content {
+    gap: 14px;
+    margin-top: 12px;
   }
 
   .segmented.compact.four-up {
