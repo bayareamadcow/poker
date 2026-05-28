@@ -25,6 +25,7 @@
             <button class="tab is-active" type="button" data-view="trainer" data-i18n="nav.trainer">Trainer</button>
             <button class="tab" type="button" data-view="range" data-i18n="nav.range">Range</button>
             <button class="tab" type="button" data-view="odds" data-i18n="nav.odds">Odds</button>
+            <button class="tab" type="button" data-view="blackjack" data-i18n="nav.blackjack">Blackjack</button>
             <button class="tab" type="button" data-view="notes" data-i18n="nav.notes">Notes</button>
             <button class="tab" type="button" data-view="comments" data-i18n="nav.comments">Comments</button>
           </nav>
@@ -230,6 +231,33 @@
                 <div id="equityNeedle"></div>
               </div>
               <div class="decision" id="oddsDecision">Good call</div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="blackjackView" aria-label="Blackjack">
+          <div class="blackjack-shell">
+            <section class="blackjack-table" aria-label="Blackjack table">
+              <div class="blackjack-dealer">
+                <span class="section-label" data-i18n="blackjack.dealer">Dealer</span>
+                <div class="blackjack-total" id="blackjackDealerTotal">0</div>
+                <div class="blackjack-cards" id="blackjackDealerCards"></div>
+              </div>
+
+              <div class="blackjack-active-hand">
+                <div class="blackjack-hand-heading">
+                  <span class="section-label" id="blackjackActiveLabel">Hand 1</span>
+                  <strong id="blackjackActiveTotal">0</strong>
+                </div>
+                <div class="blackjack-cards large" id="blackjackActiveCards"></div>
+              </div>
+
+              <div class="blackjack-hand-strip" id="blackjackHandStrip"></div>
+            </section>
+
+            <section class="blackjack-dock" aria-label="Blackjack actions">
+              <div class="blackjack-message" id="blackjackMessage"></div>
+              <div class="blackjack-actions" id="blackjackActions"></div>
             </section>
           </div>
         </section>

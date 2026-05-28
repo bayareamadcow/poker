@@ -103,6 +103,7 @@ const i18n = {
     "nav.trainer": "Trainer",
     "nav.range": "Range",
     "nav.odds": "Odds",
+    "nav.blackjack": "Blackjack",
     "nav.notes": "Notes",
     "nav.comments": "Comments",
     "label.table": "Table",
@@ -201,6 +202,26 @@ const i18n = {
     "button.dealTurn": "Deal Turn",
     "button.dealRiver": "Deal River",
     "button.showdown": "Showdown",
+    "blackjack.dealer": "Dealer",
+    "blackjack.hand": "Hand",
+    "blackjack.activeHand": "Active Hand",
+    "blackjack.actions": "Actions",
+    "blackjack.hit": "Hit",
+    "blackjack.stand": "Stand",
+    "blackjack.double": "Double",
+    "blackjack.split": "Split",
+    "blackjack.surrender": "Surrender",
+    "blackjack.newDeal": "New Deal",
+    "blackjack.playing": "Play the active hand. All actions stay visible; disabled actions are unavailable for this hand.",
+    "blackjack.dealerTurn": "Dealer draws. Results are shown below each hand.",
+    "blackjack.win": "Win",
+    "blackjack.lose": "Lose",
+    "blackjack.push": "Push",
+    "blackjack.bust": "Bust",
+    "blackjack.blackjack": "Blackjack",
+    "blackjack.stood": "Stood",
+    "blackjack.surrendered": "Surrendered",
+    "blackjack.advice": "Basic hint",
     "odds.good": "Good call",
     "odds.thin": "Thin call",
     "odds.bad": "Not enough equity",
@@ -217,6 +238,7 @@ const i18n = {
     "nav.trainer": "训练",
     "nav.range": "范围",
     "nav.odds": "赔率",
+    "nav.blackjack": "Blackjack",
     "nav.notes": "笔记",
     "nav.comments": "留言",
     "label.table": "桌型",
@@ -315,6 +337,26 @@ const i18n = {
     "button.dealTurn": "发转牌",
     "button.dealRiver": "发河牌",
     "button.showdown": "摊牌",
+    "blackjack.dealer": "庄家",
+    "blackjack.hand": "手牌",
+    "blackjack.activeHand": "当前手牌",
+    "blackjack.actions": "动作",
+    "blackjack.hit": "要牌",
+    "blackjack.stand": "停牌",
+    "blackjack.double": "加倍",
+    "blackjack.split": "分牌",
+    "blackjack.surrender": "投降",
+    "blackjack.newDeal": "新一局",
+    "blackjack.playing": "打当前手牌。所有动作固定显示；灰色代表这手牌当前不能用。",
+    "blackjack.dealerTurn": "庄家补牌，结果会显示在每手牌下面。",
+    "blackjack.win": "赢",
+    "blackjack.lose": "输",
+    "blackjack.push": "平",
+    "blackjack.bust": "爆牌",
+    "blackjack.blackjack": "Blackjack",
+    "blackjack.stood": "已停牌",
+    "blackjack.surrendered": "已投降",
+    "blackjack.advice": "基础建议",
     "odds.good": "可以跟",
     "odds.thin": "边缘跟注",
     "odds.bad": "权益不够",
@@ -497,6 +539,7 @@ const state = {
   runoutMode: "street",
   runout: null,
   forcedOpener: null,
+  blackjack: null,
 };
 
 const el = {
@@ -555,6 +598,14 @@ const el = {
   equity: document.querySelector("#equity"),
   equityNeedle: document.querySelector("#equityNeedle"),
   oddsDecision: document.querySelector("#oddsDecision"),
+  blackjackDealerTotal: document.querySelector("#blackjackDealerTotal"),
+  blackjackDealerCards: document.querySelector("#blackjackDealerCards"),
+  blackjackActiveLabel: document.querySelector("#blackjackActiveLabel"),
+  blackjackActiveTotal: document.querySelector("#blackjackActiveTotal"),
+  blackjackActiveCards: document.querySelector("#blackjackActiveCards"),
+  blackjackHandStrip: document.querySelector("#blackjackHandStrip"),
+  blackjackMessage: document.querySelector("#blackjackMessage"),
+  blackjackActions: document.querySelector("#blackjackActions"),
   notesGrid: document.querySelector("#notesGrid"),
   commentsEmbed: document.querySelector("#commentsEmbed"),
 };
@@ -592,6 +643,7 @@ function themeLabel(themeId) {
 }
 
 function init() {
+  state.blackjack = createBlackjackRound();
   renderRankPickers();
   renderNotes();
   bindEvents();
@@ -618,11 +670,29 @@ function bindEvents() {
       document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("is-active", tab === button));
       document.querySelectorAll(".view").forEach((view) => view.classList.remove("is-active"));
       document.querySelector(`#${state.view}View`).classList.add("is-active");
+      document.body.dataset.view = state.view;
       if (state.view === "comments") {
         ensureCommentsEmbed();
       }
+      if (state.view === "blackjack" && !state.blackjack) {
+        state.blackjack = createBlackjackRound();
+      }
       renderRange();
+      renderBlackjack();
     });
+  });
+
+  el.blackjackActions.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-blackjack-action]");
+    if (!button || button.disabled) return;
+    handleBlackjackAction(button.dataset.blackjackAction);
+  });
+
+  el.blackjackHandStrip.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-blackjack-hand]");
+    if (!button) return;
+    state.blackjack.activeIndex = Number(button.dataset.blackjackHand);
+    renderBlackjack();
   });
 
   el.stackSize.addEventListener("input", () => {
@@ -675,11 +745,13 @@ function render() {
   renderTrainer();
   renderRange();
   renderOdds();
+  renderBlackjack();
   renderNotes();
   renderScore();
 }
 
 function renderStaticText() {
+  document.body.dataset.view = state.view;
   document.documentElement.lang = state.lang === "zh" ? "zh-Hans" : "en";
   document.querySelectorAll("[data-i18n]").forEach((node) => {
     node.textContent = t(node.dataset.i18n);
@@ -1896,6 +1968,286 @@ function renderOdds() {
     el.oddsDecision.textContent = t("odds.bad");
     el.oddsDecision.classList.add("bad");
   }
+}
+
+function renderBlackjack() {
+  if (!state.blackjack) return;
+
+  const round = state.blackjack;
+  const activeHand = round.hands[round.activeIndex] || round.hands[0];
+  const dealerTotal = blackjackHandValue(round.dealer);
+  const activeTotal = blackjackHandValue(activeHand.cards);
+  const showDealerHole = round.phase !== "player";
+
+  el.blackjackDealerTotal.textContent = showDealerHole
+    ? blackjackTotalText(dealerTotal)
+    : `${blackjackCardPoint(round.dealer[0])} + ?`;
+  el.blackjackDealerCards.innerHTML = round.dealer
+    .map((card, index) => (index === 1 && !showDealerHole ? renderBlackjackBack() : renderCard(card, "blackjack-card")))
+    .join("");
+
+  el.blackjackActiveLabel.textContent = `${t("blackjack.activeHand")} ${round.activeIndex + 1}`;
+  el.blackjackActiveTotal.textContent = blackjackHandStatusText(activeHand, activeTotal);
+  el.blackjackActiveCards.innerHTML = activeHand.cards.map((card) => renderCard(card, "blackjack-card active-card")).join("");
+
+  el.blackjackHandStrip.innerHTML = round.hands
+    .map((hand, index) => renderBlackjackHandTab(hand, index))
+    .join("");
+
+  el.blackjackMessage.innerHTML = `
+    <strong>${blackjackAdvice(activeHand, round.dealer[0])}</strong>
+    <span>${round.phase === "dealer" ? t("blackjack.dealerTurn") : t("blackjack.playing")}</span>
+  `;
+
+  el.blackjackActions.innerHTML = blackjackActionButtons(activeHand).join("");
+}
+
+function renderBlackjackHandTab(hand, index) {
+  const total = blackjackHandValue(hand.cards);
+  const active = index === state.blackjack.activeIndex ? "is-active" : "";
+  return `
+    <button type="button" class="blackjack-hand-tab ${active} ${hand.status}" data-blackjack-hand="${index}">
+      <span>${t("blackjack.hand")} ${index + 1}</span>
+      <strong>${blackjackHandStatusText(hand, total)}</strong>
+      <em>${hand.cards.map((card) => card.rank).join(" ")}</em>
+    </button>
+  `;
+}
+
+function blackjackActionButtons(hand) {
+  const availability = blackjackActionAvailability(hand);
+  return [
+    ["hit", "blackjack.hit"],
+    ["stand", "blackjack.stand"],
+    ["double", "blackjack.double"],
+    ["split", "blackjack.split"],
+    ["surrender", "blackjack.surrender"],
+    ["newDeal", "blackjack.newDeal"],
+  ].map(([action, labelKey]) => `
+    <button type="button" data-blackjack-action="${action}" class="${action}" ${availability[action] ? "" : "disabled"}>
+      ${t(labelKey)}
+    </button>
+  `);
+}
+
+function blackjackActionAvailability(hand) {
+  const playing = state.blackjack.phase === "player" && hand?.status === "playing";
+  const twoCards = hand?.cards.length === 2;
+  const canSplit = playing && twoCards && state.blackjack.hands.length < 5 && blackjackCardPoint(hand.cards[0]) === blackjackCardPoint(hand.cards[1]);
+  return {
+    hit: playing,
+    stand: playing,
+    double: playing && twoCards,
+    split: canSplit,
+    surrender: playing && twoCards,
+    newDeal: true,
+  };
+}
+
+function handleBlackjackAction(action) {
+  if (action === "newDeal") {
+    state.blackjack = createBlackjackRound();
+    renderBlackjack();
+    return;
+  }
+
+  const round = state.blackjack;
+  const hand = round.hands[round.activeIndex];
+  if (!hand || hand.status !== "playing") return;
+
+  if (action === "hit") {
+    hand.cards.push(drawBlackjackCard(round));
+    settleBlackjackHandIfDone(hand);
+  } else if (action === "stand") {
+    hand.status = "stand";
+  } else if (action === "double" && hand.cards.length === 2) {
+    hand.bet *= 2;
+    hand.cards.push(drawBlackjackCard(round));
+    hand.status = blackjackHandValue(hand.cards).total > 21 ? "bust" : "stand";
+  } else if (action === "split" && blackjackActionAvailability(hand).split) {
+    splitBlackjackHand(round, hand);
+  } else if (action === "surrender" && hand.cards.length === 2) {
+    hand.status = "surrender";
+  }
+
+  advanceBlackjackRound();
+  renderBlackjack();
+}
+
+function createBlackjackRound() {
+  const round = {
+    shoe: shuffleBlackjackDeck(),
+    dealer: [],
+    hands: [],
+    activeIndex: 0,
+    phase: "player",
+  };
+
+  const firstHand = { cards: [], bet: 1, status: "playing", result: "" };
+  firstHand.cards.push(drawBlackjackCard(round));
+  round.dealer.push(drawBlackjackCard(round));
+  firstHand.cards.push(drawBlackjackCard(round));
+  round.dealer.push(drawBlackjackCard(round));
+  round.hands.push(firstHand);
+
+  settleBlackjackHandIfDone(firstHand);
+  if (firstHand.status !== "playing") {
+    advanceBlackjackRound(round);
+  }
+
+  return round;
+}
+
+function shuffleBlackjackDeck() {
+  const deck = [];
+  suits.forEach((suit) => {
+    ranks.forEach((rank) => deck.push({ rank, suit }));
+  });
+
+  for (let index = deck.length - 1; index > 0; index -= 1) {
+    const swap = randomInt(0, index);
+    [deck[index], deck[swap]] = [deck[swap], deck[index]];
+  }
+  return deck;
+}
+
+function drawBlackjackCard(round) {
+  if (!round.shoe.length) {
+    round.shoe = shuffleBlackjackDeck();
+  }
+  return round.shoe.pop();
+}
+
+function splitBlackjackHand(round, hand) {
+  const splitCard = hand.cards.pop();
+  const newHand = { cards: [splitCard, drawBlackjackCard(round)], bet: hand.bet, status: "playing", result: "" };
+  hand.cards.push(drawBlackjackCard(round));
+  round.hands.splice(round.activeIndex + 1, 0, newHand);
+  settleBlackjackHandIfDone(hand);
+  settleBlackjackHandIfDone(newHand);
+}
+
+function settleBlackjackHandIfDone(hand) {
+  const total = blackjackHandValue(hand.cards).total;
+  if (total > 21) {
+    hand.status = "bust";
+  } else if (total === 21 && hand.cards.length === 2) {
+    hand.status = "blackjack";
+  }
+}
+
+function advanceBlackjackRound(round = state.blackjack) {
+  const next = round.hands.findIndex((hand) => hand.status === "playing");
+  if (next >= 0) {
+    round.activeIndex = next;
+    return;
+  }
+
+  round.phase = "dealer";
+  playDealer(round);
+  settleBlackjackResults(round);
+  round.phase = "settled";
+}
+
+function playDealer(round) {
+  while (blackjackHandValue(round.dealer).total < 17) {
+    round.dealer.push(drawBlackjackCard(round));
+  }
+}
+
+function settleBlackjackResults(round) {
+  const dealerTotal = blackjackHandValue(round.dealer).total;
+  const dealerBust = dealerTotal > 21;
+
+  round.hands.forEach((hand) => {
+    const total = blackjackHandValue(hand.cards).total;
+    if (hand.status === "surrender") {
+      hand.result = "surrender";
+    } else if (hand.status === "bust" || total > 21) {
+      hand.result = "lose";
+    } else if (hand.status === "blackjack" && round.dealer.length === 2 && dealerTotal === 21) {
+      hand.result = "push";
+    } else if (hand.status === "blackjack") {
+      hand.result = "win";
+    } else if (dealerBust || total > dealerTotal) {
+      hand.result = "win";
+    } else if (total === dealerTotal) {
+      hand.result = "push";
+    } else {
+      hand.result = "lose";
+    }
+  });
+}
+
+function blackjackHandValue(cards) {
+  let total = 0;
+  let aces = 0;
+  cards.forEach((card) => {
+    if (card.rank === "A") {
+      aces += 1;
+      total += 11;
+    } else {
+      total += blackjackCardPoint(card);
+    }
+  });
+
+  while (total > 21 && aces > 0) {
+    total -= 10;
+    aces -= 1;
+  }
+
+  return { total, soft: aces > 0 };
+}
+
+function blackjackCardPoint(card) {
+  if (card.rank === "A") return 11;
+  if (["K", "Q", "J", "T"].includes(card.rank)) return 10;
+  return Number(card.rank);
+}
+
+function blackjackTotalText(value) {
+  return `${value.soft ? "Soft " : ""}${value.total}`;
+}
+
+function blackjackHandStatusText(hand, value) {
+  if (hand.result) return blackjackResultText(hand.result);
+  if (hand.status === "blackjack") return t("blackjack.blackjack");
+  if (hand.status === "bust") return t("blackjack.bust");
+  if (hand.status === "stand") return `${t("blackjack.stood")} ${blackjackTotalText(value)}`;
+  if (hand.status === "surrender") return t("blackjack.surrendered");
+  return blackjackTotalText(value);
+}
+
+function blackjackResultText(result) {
+  return {
+    win: t("blackjack.win"),
+    lose: t("blackjack.lose"),
+    push: t("blackjack.push"),
+    surrender: t("blackjack.surrendered"),
+  }[result] || result;
+}
+
+function blackjackAdvice(hand, dealerUpCard) {
+  const total = blackjackHandValue(hand.cards);
+  const dealer = blackjackCardPoint(dealerUpCard);
+  if (state.blackjack.phase === "settled") return state.lang === "zh" ? "这一局结束，可以新开一局。" : "Round complete. Start a new deal.";
+  if (hand.status !== "playing") return state.lang === "zh" ? "这手牌已结束，切到下一手。" : "This hand is done; move to the next hand.";
+  if (hand.cards.length === 2 && blackjackCardPoint(hand.cards[0]) === blackjackCardPoint(hand.cards[1])) {
+    if (["A", "8"].includes(hand.cards[0].rank)) return `${t("blackjack.advice")}: ${t("blackjack.split")}`;
+  }
+  if (total.soft && total.total <= 18) return `${t("blackjack.advice")}: ${dealer >= 4 && dealer <= 6 ? t("blackjack.double") : t("blackjack.hit")}`;
+  if (total.total <= 11) return `${t("blackjack.advice")}: ${hand.cards.length === 2 ? t("blackjack.double") : t("blackjack.hit")}`;
+  if (total.total >= 17) return `${t("blackjack.advice")}: ${t("blackjack.stand")}`;
+  if (total.total >= 12 && total.total <= 16) return `${t("blackjack.advice")}: ${dealer >= 2 && dealer <= 6 ? t("blackjack.stand") : t("blackjack.hit")}`;
+  return `${t("blackjack.advice")}: ${t("blackjack.hit")}`;
+}
+
+function renderBlackjackBack() {
+  return `
+    <div class="playing-card blackjack-card hidden-card">
+      <div class="card-center">?</div>
+    </div>
+  `;
 }
 
 function renderNotes() {
